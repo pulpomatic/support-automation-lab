@@ -1,9 +1,3 @@
-"""
-Class: Query
-
-This class is responsible for managing the queries that will be executed in the database.
-"""
-
 class Query:
 
     # Constructor
@@ -15,22 +9,16 @@ class Query:
         print(f"Executing query: {self.query}")
         return True
 
-    # Method to get the info of the query
+    # Method to get the info of the query    
     def __str__(self):
         return f"{self.query}"
     
-    # Method to get the account name
-    def get_account_name(self, name):
-        return f"SELECT a.id, a.legacy_account_id, a.name 
-                 FROM accounts a 
-                 WHERE a.name = '{name}'"
-    
-    # Method to get the account legacy code
-    def get_account_legacy_code(self, legacy_code):
-        return f"SELECT a.id, a.legacy_account_id, a.legacy_code
-                 FROM accounts a 
-                 WHERE a.legacy_code = '{legacy_code}'"
-    
-    # Method to get the account mgmt id
-    def get_account_mgmt_id(self):
-        return f"SELECT * FROM {self.query}"
+    # Static method to get the account name
+    @staticmethod
+    def get_account_name(name):
+        return f"""SELECT a.id, a.legacy_account_id, a.name FROM accounts a WHERE a.name = '{name}';"""
+
+    # Static method to get the account legacy code
+    @staticmethod
+    def get_account_legacy_code(legacy_code):
+        return f"""SELECT a.id, a.legacy_account_id, a.legacy_code FROM accounts a WHERE a.legacy_code = '{legacy_code}';"""

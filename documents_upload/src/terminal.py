@@ -35,15 +35,3 @@ class Terminal:
     def account_name():
         account_name = input("Ingresa el nombre de la cuenta o su legacy_code: ")
         return account_name
-
-    def account_core_id():
-        core_id = input("Ingresa el core_id de la cuenta: ")
-        return core_id
-
-# Llamar a los métodos y almacenar los resultados
-nombre_cuenta = Terminal.account_name()
-core_id = Terminal.account_core_id()
-
-# Imprimir los resultados
-print(f"Nombre de la cuenta o legacy_code: {nombre_cuenta}")
-print(f"Core ID de la cuenta: {core_id}")
