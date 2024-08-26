@@ -84,7 +84,8 @@ def main():
     - Solicita al usuario el número máximo de filas por archivo.
     - Llama a la función read_and_split_csv para iniciar el procesamiento de los archivos en la carpeta './files'.
     """
-    folder_path = './files'  # Modify as needed
+    current_path = os.path.dirname(os.path.abspath(__file__))
+    folder_path = os.path.join(current_path, 'files')  # Modify as needed
     max_rows = int(input("Enter the maximum number of rows for new CSV files: "))
     read_and_split_csv(folder_path, max_rows)
 
