@@ -1,0 +1,978 @@
+[
+  {
+    "codigo_producto": 1,
+    "pulpo": {
+      "reference_code": 2020,
+      "expense_type": "ITV",
+      "product_description": "ITV"
+    }
+  },
+  {
+    "codigo_producto": 11,
+    "pulpo": {
+      "reference_code": 2007,
+      "expense_type": "Lubricantes",
+      "product_description": "LUBRICANTES"
+    }
+  },
+  {
+    "codigo_producto": 13,
+    "pulpo": {
+      "reference_code": 2007,
+      "expense_type": "Lubricantes",
+      "product_description": "LUBRIFICANTE"
+    }
+  },
+  {
+    "codigo_producto": 14,
+    "pulpo": {
+      "reference_code": 2002,
+      "expense_type": "Bombonas",
+      "product_description": "BOMBONA K6 CN"
+    }
+  },
+  {
+    "codigo_producto": 21,
+    "pulpo": {
+      "reference_code": 2002,
+      "expense_type": "Bombonas",
+      "product_description": "OTROS PRODUCTOS BOMBONA GAS"
+    }
+  },
+  {
+    "codigo_producto": 22,
+    "pulpo": {
+      "reference_code": 2002,
+      "expense_type": "Bombonas",
+      "product_description": "BOMBONA K6"
+    }
+  },
+  {
+    "codigo_producto": 23,
+    "pulpo": {
+      "reference_code": 2007,
+      "expense_type": "Lubricantes",
+      "product_description": "LUBRIC. CA"
+    }
+  },
+  {
+    "codigo_producto": 25,
+    "pulpo": {
+      "reference_code": 2017,
+      "expense_type": "Taller",
+      "product_description": "ASISTENC. CA"
+    }
+  },
+  {
+    "codigo_producto": 26,
+    "pulpo": {
+      "reference_code": 2017,
+      "expense_type": "Taller",
+      "product_description": "TALLER CA"
+    }
+  },
+  {
+    "codigo_producto": 27,
+    "pulpo": {
+      "reference_code": 2017,
+      "expense_type": "Taller",
+      "product_description": "TALL-ASIS CA"
+    }
+  },
+  {
+    "codigo_producto": 30,
+    "pulpo": {
+      "reference_code": 2012,
+      "expense_type": "Peajes",
+      "product_description": "ACCESO MERCA"
+    }
+  },
+  {
+    "codigo_producto": 31,
+    "pulpo": {
+      "reference_code": 2017,
+      "expense_type": "Taller",
+      "product_description": "COM.TALLER CA"
+    }
+  },
+  {
+    "codigo_producto": 39,
+    "pulpo": {
+      "reference_code": 2010,
+      "expense_type": "Otros",
+      "product_description": "RECUPERACION IVA DKV"
+    }
+  },
+  {
+    "codigo_producto": 40,
+    "pulpo": {
+      "reference_code": 2012,
+      "expense_type": "Peajes",
+      "product_description": "TOLL COLLECT ALEMANI"
+    }
+  },
+  {
+    "codigo_producto": 41,
+    "pulpo": {
+      "reference_code": 2017,
+      "expense_type": "Taller",
+      "product_description": "COMISION ITV"
+    }
+  },
+  {
+    "codigo_producto": 42,
+    "pulpo": {
+      "reference_code": 2002,
+      "expense_type": "Bombonas",
+      "product_description": "OTROS PRODUCTOS BOMBONA GAS CN"
+    }
+  },
+  {
+    "codigo_producto": 51,
+    "pulpo": {
+      "reference_code": 2007,
+      "expense_type": "Lubricantes",
+      "product_description": "LUBRICA.AND"
+    }
+  },
+  {
+    "codigo_producto": 53,
+    "pulpo": {
+      "reference_code": 2021,
+      "expense_type": "Recarga eléctrica",
+      "product_description": "RECARGA ELECTRICA"
+    }
+  },
+  {
+    "codigo_producto": 54,
+    "pulpo": {
+      "reference_code": 2009,
+      "expense_type": "Ocupación recarga eléctrica",
+      "product_description": "OCUPACION R.ELECTRICA"
+    }
+  },
+  {
+    "codigo_producto": 55,
+    "pulpo": {
+      "reference_code": 2021,
+      "expense_type": "Recarga eléctrica",
+      "product_description": "RECARGA ELECTRICA CN"
+    }
+  },
+  {
+    "codigo_producto": 56,
+    "pulpo": {
+      "reference_code": 2009,
+      "expense_type": "Ocupación recarga eléctrica",
+      "product_description": "OCUPACION R.ELECTRICA CN"
+    }
+  },
+  {
+    "codigo_producto": 57,
+    "pulpo": {
+      "reference_code": 2021,
+      "expense_type": "Recarga eléctrica",
+      "product_description": "RECARGA ELECTRICA AN"
+    }
+  },
+  {
+    "codigo_producto": 58,
+    "pulpo": {
+      "reference_code": 2009,
+      "expense_type": "Ocupación recarga eléctrica",
+      "product_description": "OCUPACION R.ELECTRICA AN"
+    }
+  },
+  {
+    "codigo_producto": 63,
+    "pulpo": {
+      "reference_code": 2012,
+      "expense_type": "Peajes",
+      "product_description": "AUTOESTRADAS"
+    }
+  },
+  {
+    "codigo_producto": 74,
+    "pulpo": {
+      "reference_code": 2010,
+      "expense_type": "Otros",
+      "product_description": "REDENCION TRAVEL"
+    }
+  },
+  {
+    "codigo_producto": 80,
+    "pulpo": {
+      "reference_code": 2017,
+      "expense_type": "Taller",
+      "product_description": "ASISTENCIA"
+    }
+  },
+  {
+    "codigo_producto": 81,
+    "pulpo": {
+      "reference_code": 2017,
+      "expense_type": "Taller",
+      "product_description": "TALLER"
+    }
+  },
+  {
+    "codigo_producto": 82,
+    "pulpo": {
+      "reference_code": 2017,
+      "expense_type": "Taller",
+      "product_description": "TALLER-ASIS"
+    }
+  },
+  {
+    "codigo_producto": 84,
+    "pulpo": {
+      "reference_code": 2017,
+      "expense_type": "Taller",
+      "product_description": "LAV.ENGRASE"
+    }
+  },
+  {
+    "codigo_producto": 85,
+    "pulpo": {
+      "reference_code": 2017,
+      "expense_type": "Taller",
+      "product_description": "MECANICA"
+    }
+  },
+  {
+    "codigo_producto": 86,
+    "pulpo": {
+      "reference_code": 2017,
+      "expense_type": "Taller",
+      "product_description": "LAV.ENGR.CA"
+    }
+  },
+  {
+    "codigo_producto": 87,
+    "pulpo": {
+      "reference_code": 2017,
+      "expense_type": "Taller",
+      "product_description": "TIENDA BOXE"
+    }
+  },
+  {
+    "codigo_producto": 89,
+    "pulpo": {
+      "reference_code": 2017,
+      "expense_type": "Taller",
+      "product_description": "TIENDA CA"
+    }
+  },
+  {
+    "codigo_producto": 91,
+    "pulpo": {
+      "reference_code": 2017,
+      "expense_type": "Taller",
+      "product_description": "COM.TALLER"
+    }
+  },
+  {
+    "codigo_producto": 93,
+    "pulpo": {
+      "reference_code": 2018,
+      "expense_type": "Tienda",
+      "product_description": "TIENDA"
+    }
+  },
+  {
+    "codigo_producto": 94,
+    "pulpo": {
+      "reference_code": 2017,
+      "expense_type": "Taller",
+      "product_description": "SEGURO"
+    }
+  },
+  {
+    "codigo_producto": 95,
+    "pulpo": {
+      "reference_code": 2012,
+      "expense_type": "Peajes",
+      "product_description": "AUTOPISTAS"
+    }
+  },
+  {
+    "codigo_producto": 98,
+    "pulpo": {
+      "reference_code": 2012,
+      "expense_type": "Peajes",
+      "product_description": "AUTOPISTAS"
+    }
+  },
+  {
+    "codigo_producto": 99,
+    "pulpo": {
+      "reference_code": 2010,
+      "expense_type": "Otros",
+      "product_description": "OTROS PRODUCTOS"
+    }
+  },
+  {
+    "codigo_producto": 100,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "MOVISTAR (VENTA)"
+    }
+  },
+  {
+    "codigo_producto": 106,
+    "pulpo": {
+      "reference_code": 2005,
+      "expense_type": "Lavado/Limpieza",
+      "product_description": "LAVADOS"
+    }
+  },
+  {
+    "codigo_producto": 110,
+    "pulpo": {
+      "reference_code": 2012,
+      "expense_type": "Peajes",
+      "product_description": "APARCAMIENTO"
+    }
+  },
+  {
+    "codigo_producto": 111,
+    "pulpo": {
+      "reference_code": 2018,
+      "expense_type": "Tienda",
+      "product_description": "PRODUCTO LOJA"
+    }
+  },
+  {
+    "codigo_producto": 116,
+    "pulpo": {
+      "reference_code": 2010,
+      "expense_type": "Otros",
+      "product_description": "TROCA DE PONTOS"
+    }
+  },
+  {
+    "codigo_producto": 118,
+    "pulpo": {
+      "reference_code": 2017,
+      "expense_type": "Taller",
+      "product_description": "ASIST EXT"
+    }
+  },
+  {
+    "codigo_producto": 119,
+    "pulpo": {
+      "reference_code": 2005,
+      "expense_type": "Lavado/Limpieza",
+      "product_description": "LAVAGENS"
+    }
+  },
+  {
+    "codigo_producto": 120,
+    "pulpo": {
+      "reference_code": 2017,
+      "expense_type": "Taller",
+      "product_description": "MULTAS 21%"
+    }
+  },
+  {
+    "codigo_producto": 121,
+    "pulpo": {
+      "reference_code": 2017,
+      "expense_type": "Taller",
+      "product_description": "SERV TAXI 10%"
+    }
+  },
+  {
+    "codigo_producto": 122,
+    "pulpo": {
+      "reference_code": 2017,
+      "expense_type": "Taller",
+      "product_description": "MULTA/EFECTI"
+    }
+  },
+  {
+    "codigo_producto": 123,
+    "pulpo": {
+      "reference_code": 2018,
+      "expense_type": "Tienda",
+      "product_description": "SP"
+    }
+  },
+  {
+    "codigo_producto": 126,
+    "pulpo": {
+      "reference_code": 2005,
+      "expense_type": "Lavado/Limpieza",
+      "product_description": "LAVADOS CAN"
+    }
+  },
+  {
+    "codigo_producto": 130,
+    "pulpo": {
+      "reference_code": 2012,
+      "expense_type": "Peajes",
+      "product_description": "APARCAMIENTO"
+    }
+  },
+  {
+    "codigo_producto": 131,
+    "pulpo": {
+      "reference_code": 2012,
+      "expense_type": "Peajes",
+      "product_description": "APARCAM 5%"
+    }
+  },
+  {
+    "codigo_producto": 133,
+    "pulpo": {
+      "reference_code": 2018,
+      "expense_type": "Tienda",
+      "product_description": "TIENDA AND"
+    }
+  },
+  {
+    "codigo_producto": 136,
+    "pulpo": {
+      "reference_code": 2002,
+      "expense_type": "Bombonas",
+      "product_description": "BOMBONA K6 AN"
+    }
+  },
+  {
+    "codigo_producto": 143,
+    "pulpo": {
+      "reference_code": 2018,
+      "expense_type": "Tienda",
+      "product_description": "SP CANARIAS"
+    }
+  },
+  {
+    "codigo_producto": 146,
+    "pulpo": {
+      "reference_code": 2005,
+      "expense_type": "Lavado/Limpieza",
+      "product_description": "LAVADOS AND"
+    }
+  },
+  {
+    "codigo_producto": 163,
+    "pulpo": {
+      "reference_code": 2010,
+      "expense_type": "Otros",
+      "product_description": "OTROS"
+    }
+  },
+  {
+    "codigo_producto": 183,
+    "pulpo": {
+      "reference_code": 2010,
+      "expense_type": "Otros",
+      "product_description": "OTROS CA"
+    }
+  },
+  {
+    "codigo_producto": 184,
+    "pulpo": {
+      "reference_code": 2012,
+      "expense_type": "Peajes",
+      "product_description": "PARKING SEGURO"
+    }
+  },
+  {
+    "codigo_producto": 185,
+    "pulpo": {
+      "reference_code": 2012,
+      "expense_type": "Peajes",
+      "product_description": "VIAT INTEROPERABLE 2"
+    }
+  },
+  {
+    "codigo_producto": 186,
+    "pulpo": {
+      "reference_code": 2012,
+      "expense_type": "Peajes",
+      "product_description": "VIAT INTEROPERABLE 6"
+    }
+  },
+  {
+    "codigo_producto": 190,
+    "pulpo": {
+      "reference_code": 2004,
+      "expense_type": "Donativos",
+      "product_description": "MANOS UNIDAS"
+    }
+  },
+  {
+    "codigo_producto": 191,
+    "pulpo": {
+      "reference_code": 2004,
+      "expense_type": "Donativos",
+      "product_description": "AYUDEMOS"
+    }
+  },
+  {
+    "codigo_producto": 192,
+    "pulpo": {
+      "reference_code": 2004,
+      "expense_type": "Donativos",
+      "product_description": "AECC"
+    }
+  },
+  {
+    "codigo_producto": 200,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "VODAFONE (VENTA)"
+    }
+  },
+  {
+    "codigo_producto": 290,
+    "pulpo": {
+      "reference_code": 2004,
+      "expense_type": "Donativos",
+      "product_description": "FUNDACION CA"
+    }
+  },
+  {
+    "codigo_producto": 291,
+    "pulpo": {
+      "reference_code": 2004,
+      "expense_type": "Donativos",
+      "product_description": "AYUDEMOS CA"
+    }
+  },
+  {
+    "codigo_producto": 292,
+    "pulpo": {
+      "reference_code": 2004,
+      "expense_type": "Donativos",
+      "product_description": "AECC CA"
+    }
+  },
+  {
+    "codigo_producto": 300,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "ORANGE (VENTA)"
+    }
+  },
+  {
+    "codigo_producto": 400,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "YOIGO (VENTA)"
+    }
+  },
+  {
+    "codigo_producto": 601,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "LEBARA"
+    }
+  },
+  {
+    "codigo_producto": 602,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "ORTEL MOBILE"
+    }
+  },
+  {
+    "codigo_producto": 603,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "ORBITEL MOVIL"
+    }
+  },
+  {
+    "codigo_producto": 604,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "MAS MOVIL"
+    }
+  },
+  {
+    "codigo_producto": 605,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "MAXIMA INTERNACIONAL"
+    }
+  },
+  {
+    "codigo_producto": 606,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "FORTUNE"
+    }
+  },
+  {
+    "codigo_producto": 607,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "ORBITEL"
+    }
+  },
+  {
+    "codigo_producto": 608,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "LLAMAYA TARJETA"
+    }
+  },
+  {
+    "codigo_producto": 610,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "PAYSAFECARD"
+    }
+  },
+  {
+    "codigo_producto": 611,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "PLAN B"
+    }
+  },
+  {
+    "codigo_producto": 612,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "SMARTBOX"
+    }
+  },
+  {
+    "codigo_producto": 613,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "KONLINE"
+    }
+  },
+  {
+    "codigo_producto": 614,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "PRINTELCARD"
+    }
+  },
+  {
+    "codigo_producto": 615,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "TU"
+    }
+  },
+  {
+    "codigo_producto": 616,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "LLAMAYA MOVIL"
+    }
+  },
+  {
+    "codigo_producto": 618,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "LYCAMOBILE/GT MOBILE"
+    }
+  },
+  {
+    "codigo_producto": 619,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "MOVISTAR"
+    }
+  },
+  {
+    "codigo_producto": 620,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "YOIGO"
+    }
+  },
+  {
+    "codigo_producto": 621,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "VODAFONE"
+    }
+  },
+  {
+    "codigo_producto": 622,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "ORANGE"
+    }
+  },
+  {
+    "codigo_producto": 623,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "DIGI MOVIL"
+    }
+  },
+  {
+    "codigo_producto": 625,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "DISNEY CLUB PENGUIN"
+    }
+  },
+  {
+    "codigo_producto": 626,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "STEAM"
+    }
+  },
+  {
+    "codigo_producto": 627,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "ITUNES"
+    }
+  },
+  {
+    "codigo_producto": 628,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "SPOTIFY"
+    }
+  },
+  {
+    "codigo_producto": 629,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "SONY"
+    }
+  },
+  {
+    "codigo_producto": 630,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "TARJETA-R (VENTA)"
+    }
+  },
+  {
+    "codigo_producto": 631,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "TARJETA-R (RECARGA)"
+    }
+  },
+  {
+    "codigo_producto": 632,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "PULSERA (VENTA)"
+    }
+  },
+  {
+    "codigo_producto": 634,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "NINTENDO"
+    }
+  },
+  {
+    "codigo_producto": 636,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "NINTENDO 3 MESES"
+    }
+  },
+  {
+    "codigo_producto": 637,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "NINTENDO 12 MESES"
+    }
+  },
+  {
+    "codigo_producto": 638,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "GOOGLE"
+    }
+  },
+  {
+    "codigo_producto": 639,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "NETFLIX"
+    }
+  },
+  {
+    "codigo_producto": 660,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "DISNEY C.PENGUIN 1M"
+    }
+  },
+  {
+    "codigo_producto": 661,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "DISNEY C.PENGUIN 6M"
+    }
+  },
+  {
+    "codigo_producto": 662,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "SPOTIFY 3 MESES"
+    }
+  },
+  {
+    "codigo_producto": 663,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "SPOTIFY 6 MESES"
+    }
+  },
+  {
+    "codigo_producto": 664,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "SPOTIFY 12 MESES"
+    }
+  },
+  {
+    "codigo_producto": 665,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "SONY 3 MESES"
+    }
+  },
+  {
+    "codigo_producto": 666,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "SONY 12 MESES"
+    }
+  },
+  {
+    "codigo_producto": 667,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "SONY DINERO VIRTUAL"
+    }
+  },
+  {
+    "codigo_producto": 668,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "DISNEY"
+    }
+  },
+  {
+    "codigo_producto": 669,
+    "pulpo": {
+      "reference_code": 2014,
+      "expense_type": "Recargas",
+      "product_description": "DAZN"
+    }
+  },
+  {
+    "codigo_producto": 900,
+    "pulpo": {
+      "reference_code": 2012,
+      "expense_type": "Peajes",
+      "product_description": "CAMBIO GO-BOX AUSTRI"
+    }
+  },
+  {
+    "codigo_producto": 901,
+    "pulpo": {
+      "reference_code": 2012,
+      "expense_type": "Peajes",
+      "product_description": "TASA PEAJE AUSTRIA"
+    }
+  },
+  {
+    "codigo_producto": 902,
+    "pulpo": {
+      "reference_code": 2012,
+      "expense_type": "Peajes",
+      "product_description": "PRE PEAJE AUSTRIA"
+    }
+  },
+  {
+    "codigo_producto": 903,
+    "pulpo": {
+      "reference_code": 2012,
+      "expense_type": "Peajes",
+      "product_description": "POST PEAJE AUSTRIA"
+    }
+  },
+  {
+    "codigo_producto": 904,
+    "pulpo": {
+      "reference_code": 2012,
+      "expense_type": "Peajes",
+      "product_description": "ABONO PEAJE AUSTRIA"
+    }
+  },
+  {
+    "codigo_producto": 905,
+    "pulpo": {
+      "reference_code": 2012,
+      "expense_type": "Peajes",
+      "product_description": "CUOTA SISTEMA TISPL"
+    }
+  },
+  {
+    "codigo_producto": 906,
+    "pulpo": {
+      "reference_code": 2012,
+      "expense_type": "Peajes",
+      "product_description": "PAGO FRACCION. TISPL"
+    }
+  }
+]

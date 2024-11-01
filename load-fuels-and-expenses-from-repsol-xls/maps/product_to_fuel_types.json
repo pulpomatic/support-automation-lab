@@ -1,0 +1,794 @@
+[
+  {
+    "codigo_producto": 3,
+    "pulpo": {
+      "reference_code": 6002,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina 95",
+      "product_description": "EFITEC 95 N"
+    }
+  },
+  {
+    "codigo_producto": 5,
+    "pulpo": {
+      "reference_code": 6007,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Diésel",
+      "product_description": "DIESEL E+ NEO"
+    }
+  },
+  {
+    "codigo_producto": 6,
+    "pulpo": {
+      "reference_code": 6011,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Gasóleo B",
+      "product_description": "GO-B BONIF"
+    }
+  },
+  {
+    "codigo_producto": 7,
+    "pulpo": {
+      "reference_code": 6012,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Gasóleo C",
+      "product_description": "GO-C BONIF"
+    }
+  },
+  {
+    "codigo_producto": 12,
+    "pulpo": {
+      "reference_code": 6004,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina 98",
+      "product_description": "EFITEC 98 N"
+    }
+  },
+  {
+    "codigo_producto": 15,
+    "pulpo": {
+      "reference_code": 6010,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Diésel sintético",
+      "product_description": "DIESEL E+10 ZERO"
+    }
+  },
+  {
+    "codigo_producto": 17,
+    "pulpo": {
+      "reference_code": 6010,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Diésel sintético",
+      "product_description": "DIESEL e+100% RENOVABLE"
+    }
+  },
+  {
+    "codigo_producto": 18,
+    "pulpo": {
+      "reference_code": 6002,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina 95",
+      "product_description": "EFITEC 95 N"
+    }
+  },
+  {
+    "codigo_producto": 19,
+    "pulpo": {
+      "reference_code": 6007,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Diésel",
+      "product_description": "DIESEL E+ CN"
+    }
+  },
+  {
+    "codigo_producto": 20,
+    "pulpo": {
+      "reference_code": 6017,
+      "fuel_type": "Gas",
+      "fuel_type_of_fuels": "GLP",
+      "product_description": "AUTOGAS-G"
+    }
+  },
+  {
+    "codigo_producto": 24,
+    "pulpo": {
+      "reference_code": 6004,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina 98",
+      "product_description": "EFITEC 98 N C"
+    }
+  },
+  {
+    "codigo_producto": 28,
+    "pulpo": {
+      "reference_code": 6002,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina 95",
+      "product_description": "EFITEC 95 MA"
+    }
+  },
+  {
+    "codigo_producto": 32,
+    "pulpo": {
+      "reference_code": 6005,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina sintética",
+      "product_description": "GASOLINA EFITEC 95 ZERO CN"
+    }
+  },
+  {
+    "codigo_producto": 33,
+    "pulpo": {
+      "reference_code": 6004,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina 98",
+      "product_description": "EFITEC 98 MADEI"
+    }
+  },
+  {
+    "codigo_producto": 34,
+    "pulpo": {
+      "reference_code": 6005,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina sintética",
+      "product_description": "GASOLINA EFITEC 95 ZERO"
+    }
+  },
+  {
+    "codigo_producto": 36,
+    "pulpo": {
+      "reference_code": 6002,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina 95",
+      "product_description": "S/CHUMBO 95 A"
+    }
+  },
+  {
+    "codigo_producto": 37,
+    "pulpo": {
+      "reference_code": 6004,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina 98",
+      "product_description": "EFITEC 98"
+    }
+  },
+  {
+    "codigo_producto": 43,
+    "pulpo": {
+      "reference_code": 6002,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina 95",
+      "product_description": "EFITEC 95 AN"
+    }
+  },
+  {
+    "codigo_producto": 45,
+    "pulpo": {
+      "reference_code": 6007,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Diésel",
+      "product_description": "DIESEL e+ AN"
+    }
+  },
+  {
+    "codigo_producto": 46,
+    "pulpo": {
+      "reference_code": 6011,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Gasóleo B",
+      "product_description": "GAS.B AND"
+    }
+  },
+  {
+    "codigo_producto": 47,
+    "pulpo": {
+      "reference_code": 6012,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Gasóleo C",
+      "product_description": "GAS.C AND"
+    }
+  },
+  {
+    "codigo_producto": 52,
+    "pulpo": {
+      "reference_code": 6004,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina 98",
+      "product_description": "EFITEC 98 AN"
+    }
+  },
+  {
+    "codigo_producto": 65,
+    "pulpo": {
+      "reference_code": 6012,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Gasóleo C",
+      "product_description": "DMA MARE E+"
+    }
+  },
+  {
+    "codigo_producto": 66,
+    "pulpo": {
+      "reference_code": 6007,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Diésel",
+      "product_description": "DIESEL E+5"
+    }
+  },
+  {
+    "codigo_producto": 67,
+    "pulpo": {
+      "reference_code": 6007,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Diésel",
+      "product_description": "DIESEL E+5 CN"
+    }
+  },
+  {
+    "codigo_producto": 68,
+    "pulpo": {
+      "reference_code": 6017,
+      "fuel_type": "Gas",
+      "fuel_type_of_fuels": "GLP",
+      "product_description": "GASAUTO"
+    }
+  },
+  {
+    "codigo_producto": 69,
+    "pulpo": {
+      "reference_code": 6008,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Diésel plus",
+      "product_description": "DIESEL E+10 NEO"
+    }
+  },
+  {
+    "codigo_producto": 70,
+    "pulpo": {
+      "reference_code": 6007,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Diésel",
+      "product_description": "GASOLEO M"
+    }
+  },
+  {
+    "codigo_producto": 73,
+    "pulpo": {
+      "reference_code": 6004,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina 98",
+      "product_description": "S/CHUMBO 98 A"
+    }
+  },
+  {
+    "codigo_producto": 78,
+    "pulpo": {
+      "reference_code": 6008,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Diésel plus",
+      "product_description": "DIESEL E+10A"
+    }
+  },
+  {
+    "codigo_producto": 79,
+    "pulpo": {
+      "reference_code": 6008,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Diésel plus",
+      "product_description": "DIESEL E+10"
+    }
+  },
+  {
+    "codigo_producto": 83,
+    "pulpo": {
+      "reference_code": 6007,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Diésel",
+      "product_description": "GASOLEO MADE"
+    }
+  },
+  {
+    "codigo_producto": 92,
+    "pulpo": {
+      "reference_code": 6007,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Diésel",
+      "product_description": "GASOLEO E+ M"
+    }
+  },
+  {
+    "codigo_producto": 96,
+    "pulpo": {
+      "reference_code": 6007,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Diésel",
+      "product_description": "GASOLEO AZOR"
+    }
+  },
+  {
+    "codigo_producto": 103,
+    "pulpo": {
+      "reference_code": 6011,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Gasóleo B",
+      "product_description": "AGRODIESEL"
+    }
+  },
+  {
+    "codigo_producto": 104,
+    "pulpo": {
+      "reference_code": 6001,
+      "fuel_type": "Ad-Blue",
+      "fuel_type_of_fuels": "Ad-Blue",
+      "product_description": "ADBLUE"
+    }
+  },
+  {
+    "codigo_producto": 105,
+    "pulpo": {
+      "reference_code": 6009,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Biodiésel",
+      "product_description": "BIODIESEL 20"
+    }
+  },
+  {
+    "codigo_producto": 107,
+    "pulpo": {
+      "reference_code": 6009,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Biodiésel",
+      "product_description": "BIODIESEL 10"
+    }
+  },
+  {
+    "codigo_producto": 108,
+    "pulpo": {
+      "reference_code": 6009,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Biodiésel",
+      "product_description": "BIODIESEL 30"
+    }
+  },
+  {
+    "codigo_producto": 109,
+    "pulpo": {
+      "reference_code": 6001,
+      "fuel_type": "Ad-Blue",
+      "fuel_type_of_fuels": "Ad-Blue",
+      "product_description": "BLUE+GRANEL"
+    }
+  },
+  {
+    "codigo_producto": 113,
+    "pulpo": {
+      "reference_code": 6001,
+      "fuel_type": "Ad-Blue",
+      "fuel_type_of_fuels": "Ad-Blue",
+      "product_description": "ADBLUE EMBALADO"
+    }
+  },
+  {
+    "codigo_producto": 114,
+    "pulpo": {
+      "reference_code": 6001,
+      "fuel_type": "Ad-Blue",
+      "fuel_type_of_fuels": "Ad-Blue",
+      "product_description": "ADBLUEREPSOL"
+    }
+  },
+  {
+    "codigo_producto": 115,
+    "pulpo": {
+      "reference_code": 6017,
+      "fuel_type": "Gas",
+      "fuel_type_of_fuels": "GLP",
+      "product_description": "AUTOGAS"
+    }
+  },
+  {
+    "codigo_producto": 117,
+    "pulpo": {
+      "reference_code": 6008,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Diésel plus",
+      "product_description": "DIESEL E+10 NC"
+    }
+  },
+  {
+    "codigo_producto": 124,
+    "pulpo": {
+      "reference_code": 6001,
+      "fuel_type": "Ad-Blue",
+      "fuel_type_of_fuels": "Ad-Blue",
+      "product_description": "ADBLUE CA"
+    }
+  },
+  {
+    "codigo_producto": 125,
+    "pulpo": {
+      "reference_code": 6009,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Biodiésel",
+      "product_description": "BIODIESEL 20"
+    }
+  },
+  {
+    "codigo_producto": 127,
+    "pulpo": {
+      "reference_code": 6009,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Biodiésel",
+      "product_description": "BIODIESEL 10"
+    }
+  },
+  {
+    "codigo_producto": 128,
+    "pulpo": {
+      "reference_code": 6009,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Biodiésel",
+      "product_description": "BIODIESEL 30"
+    }
+  },
+  {
+    "codigo_producto": 129,
+    "pulpo": {
+      "reference_code": 6001,
+      "fuel_type": "Ad-Blue",
+      "fuel_type_of_fuels": "Ad-Blue",
+      "product_description": "BLUE+GRANELC"
+    }
+  },
+  {
+    "codigo_producto": 132,
+    "pulpo": {
+      "reference_code": 6002,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina 95",
+      "product_description": "GASOLINA 95"
+    }
+  },
+  {
+    "codigo_producto": 134,
+    "pulpo": {
+      "reference_code": 6007,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Diésel",
+      "product_description": "GASOLEO"
+    }
+  },
+  {
+    "codigo_producto": 135,
+    "pulpo": {
+      "reference_code": 6017,
+      "fuel_type": "Gas",
+      "fuel_type_of_fuels": "GLP",
+      "product_description": "AUTOGAS CAN"
+    }
+  },
+  {
+    "codigo_producto": 137,
+    "pulpo": {
+      "reference_code": 6007,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Diésel",
+      "product_description": "GASOLEO SIN AZUFRE"
+    }
+  },
+  {
+    "codigo_producto": 138,
+    "pulpo": {
+      "reference_code": 6003,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina 95 plus",
+      "product_description": "G95PREMIUM N"
+    }
+  },
+  {
+    "codigo_producto": 139,
+    "pulpo": {
+      "reference_code": 6003,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina 95 plus",
+      "product_description": "GASOLINA 95 ADITIVADA"
+    }
+  },
+  {
+    "codigo_producto": 140,
+    "pulpo": {
+      "reference_code": 6002,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina 95",
+      "product_description": "GASOLINA 95"
+    }
+  },
+  {
+    "codigo_producto": 141,
+    "pulpo": {
+      "reference_code": 6007,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Diésel",
+      "product_description": "GASOLEO A"
+    }
+  },
+  {
+    "codigo_producto": 142,
+    "pulpo": {
+      "reference_code": 6011,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Gasóleo B",
+      "product_description": "GASOLEO B"
+    }
+  },
+  {
+    "codigo_producto": 144,
+    "pulpo": {
+      "reference_code": 6001,
+      "fuel_type": "Ad-Blue",
+      "fuel_type_of_fuels": "Ad-Blue",
+      "product_description": "ADBLUE AN"
+    }
+  },
+  {
+    "codigo_producto": 145,
+    "pulpo": {
+      "reference_code": 6009,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Biodiésel",
+      "product_description": "BIODIESEL 20"
+    }
+  },
+  {
+    "codigo_producto": 147,
+    "pulpo": {
+      "reference_code": 6009,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Biodiésel",
+      "product_description": "BIODIESEL 10"
+    }
+  },
+  {
+    "codigo_producto": 148,
+    "pulpo": {
+      "reference_code": 6009,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Biodiésel",
+      "product_description": "BIODIESEL 30"
+    }
+  },
+  {
+    "codigo_producto": 149,
+    "pulpo": {
+      "reference_code": 6001,
+      "fuel_type": "Ad-Blue",
+      "fuel_type_of_fuels": "Ad-Blue",
+      "product_description": "BLUE+GRANELA"
+    }
+  },
+  {
+    "codigo_producto": 158,
+    "pulpo": {
+      "reference_code": 6003,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina 95 plus",
+      "product_description": "G95PREMIUM NC"
+    }
+  },
+  {
+    "codigo_producto": 160,
+    "pulpo": {
+      "reference_code": 6007,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Diésel",
+      "product_description": "DIESEL E+ VD"
+    }
+  },
+  {
+    "codigo_producto": 161,
+    "pulpo": {
+      "reference_code": 6011,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Gasóleo B",
+      "product_description": "AGRODIESEL 10"
+    }
+  },
+  {
+    "codigo_producto": 162,
+    "pulpo": {
+      "reference_code": 6012,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Gasóleo C",
+      "product_description": "ENERGY E+"
+    }
+  },
+  {
+    "codigo_producto": 164,
+    "pulpo": {
+      "reference_code": 6004,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina 98",
+      "product_description": "GASOLINA 98"
+    }
+  },
+  {
+    "codigo_producto": 165,
+    "pulpo": {
+      "reference_code": 6017,
+      "fuel_type": "Gas",
+      "fuel_type_of_fuels": "GLP",
+      "product_description": "AUTOGAS AND"
+    }
+  },
+  {
+    "codigo_producto": 169,
+    "pulpo": {
+      "reference_code": 6007,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Diésel",
+      "product_description": "GO A ADITIVA"
+    }
+  },
+  {
+    "codigo_producto": 178,
+    "pulpo": {
+      "reference_code": 6003,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina 95 plus",
+      "product_description": "G95PREMIUM A"
+    }
+  },
+  {
+    "codigo_producto": 180,
+    "pulpo": {
+      "reference_code": 6007,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Diésel",
+      "product_description": "GASOLEO A CA"
+    }
+  },
+  {
+    "codigo_producto": 181,
+    "pulpo": {
+      "reference_code": 6011,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Gasóleo B",
+      "product_description": "GASOLEO B CA"
+    }
+  },
+  {
+    "codigo_producto": 182,
+    "pulpo": {
+      "reference_code": 6012,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Gasóleo C",
+      "product_description": "GASOLEO C CA"
+    }
+  },
+  {
+    "codigo_producto": 187,
+    "pulpo": {
+      "reference_code": 6003,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina 95 plus",
+      "product_description": "EFITEC 95 PREM"
+    }
+  },
+  {
+    "codigo_producto": 188,
+    "pulpo": {
+      "reference_code": 6012,
+      "fuel_type": "Diésel",
+      "fuel_type_of_fuels": "Gasóleo C",
+      "product_description": "BIENERGY10"
+    }
+  },
+  {
+    "codigo_producto": 211,
+    "pulpo": {
+      "reference_code": 6016,
+      "fuel_type": "Gas",
+      "fuel_type_of_fuels": "GNL",
+      "product_description": "GNL (UDS. KG)"
+    }
+  },
+  {
+    "codigo_producto": 212,
+    "pulpo": {
+      "reference_code": 6015,
+      "fuel_type": "Gas",
+      "fuel_type_of_fuels": "GNC",
+      "product_description": "GNC (UDS. KG)"
+    }
+  },
+  {
+    "codigo_producto": 214,
+    "pulpo": {
+      "reference_code": 6016,
+      "fuel_type": "Gas",
+      "fuel_type_of_fuels": "GNL",
+      "product_description": "GNL (UDS. KG)"
+    }
+  },
+  {
+    "codigo_producto": 216,
+    "pulpo": {
+      "reference_code": 6001,
+      "fuel_type": "Ad-Blue",
+      "fuel_type_of_fuels": "Ad-Blue",
+      "product_description": "ADBLUE MADEIRA"
+    }
+  },
+  {
+    "codigo_producto": 218,
+    "pulpo": {
+      "reference_code": 6016,
+      "fuel_type": "Gas",
+      "fuel_type_of_fuels": "GNL",
+      "product_description": "GNL NATURGY (UDS. KG)"
+    }
+  },
+  {
+    "codigo_producto": 219,
+    "pulpo": {
+      "reference_code": 6015,
+      "fuel_type": "Gas",
+      "fuel_type_of_fuels": "GNC",
+      "product_description": "GNC NATURGY (UDS. KG)"
+    }
+  },
+  {
+    "codigo_producto": 223,
+    "pulpo": {
+      "reference_code": 6002,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina 95",
+      "product_description": "EFITEC 97"
+    }
+  },
+  {
+    "codigo_producto": 224,
+    "pulpo": {
+      "reference_code": 6004,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina 98",
+      "product_description": "EFITEC 100"
+    }
+  },
+  {
+    "codigo_producto": 243,
+    "pulpo": {
+      "reference_code": 6002,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina 95",
+      "product_description": "EFITEC 97C"
+    }
+  },
+  {
+    "codigo_producto": 244,
+    "pulpo": {
+      "reference_code": 6004,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina 98",
+      "product_description": "EFITEC 100C"
+    }
+  },
+  {
+    "codigo_producto": 263,
+    "pulpo": {
+      "reference_code": 6002,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina 95",
+      "product_description": "EFITEC 97A"
+    }
+  },
+  {
+    "codigo_producto": 264,
+    "pulpo": {
+      "reference_code": 6004,
+      "fuel_type": "Gasolina",
+      "fuel_type_of_fuels": "Gasolina 98",
+      "product_description": "EFITEC 100A"
+    }
+  }
+]
