@@ -4,6 +4,9 @@ Este script en Python está diseñado para combinar múltiples archivos Excel (.
 
 El usuario puede elegir el formato del archivo de salida (CSV o XLSX) y el nombre del archivo generado. El script lee únicamente la primera hoja de cada archivo Excel y combina los datos, preservando el formato original.
 
+Deberás verificar antes de utilizar el script el nombre de las páginas que deseas mezclar entre archivos, por ejemplo, si deseas mezclar de todos tus archivos la página "primera", todos deberán tener la misma.
+
+Este script automáticamente omite las cabeceras de los archivos para evitar que se dupliquen.
 ## Requisitos Previos
 Antes de ejecutar el script, asegúrate de tener instaladas las siguientes dependencias:
 
