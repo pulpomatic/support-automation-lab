@@ -28,7 +28,7 @@ def read_files(folder_path, sheet_name):
                 df[col] = df[col].apply(format_str)
 
                 """
-                Este codigo es util para transformar fechas a un formato especifico
+                Este codigo es util para transformar a un formato especifico
                 elif "Distancia" in col:
                     # Convertir a string con 2 decimales y mantener valores vacíos como strings vacíos
                     def format_number_int(value):
