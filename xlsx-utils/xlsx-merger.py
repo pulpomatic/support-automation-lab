@@ -20,23 +20,29 @@ def read_files(folder_path, sheet_name):
     for idx, file_path in enumerate(folder_path.glob("*.xls*")):
         try:
             # Read the specified sheet from the Excel file
+            print(f"Reading file {file_path} at sheet {sheet_name}")
             df = pd.read_excel(file_path, sheet_name=sheet_name, dtype=str, keep_default_na=False)
-
-            """
-            Este codigo es util para transformar fechas a un formato especifico
-            
             for col in df.columns:
-                if "Fecha" in col:
-                    df[col] = pd.to_datetime(df[col], errors='coerce', dayfirst=False)
-                    # Si la columna se ha convertido exitosamente a fechas, formatear como DD/MM/AAAA
-                    if pd.api.types.is_datetime64_any_dtype(df[col]):
-                        df[col] = df[col].dt.strftime('%d/%m/%Y')
-                    else:
-                        # Si no es una fecha, restaurar la columna original (sin cambios)
-                        df[col] = df[col].astype(str)
-                else:
-                    df[col] = df[col].astype(str)
-            """
+                def format_str(value):
+                    return "" if pd.isna(value) or value == "" or value == "0" else str(value)
+                df[col] = df[col].apply(format_str)
+
+                """
+                Este codigo es util para transformar fechas a un formato especifico
+                elif "Distancia" in col:
+                    # Convertir a string con 2 decimales y mantener valores vacíos como strings vacíos
+                    def format_number_int(value):
+                        try:
+                            # Intentar convertir a float y formatear a 2 decimales
+                            return f"{int(float(value))}"
+                        except (ValueError, TypeError):
+                            # Si hay un error (valor vacío o no numérico), devolver la cadena original
+                            return "" if pd.isna(value) or value == "" else str(value)
+                    # Aplicar la función a cada elemento de la columna
+                    df[col] = df[col].apply(format_number_int)
+                """
+
+
             # Skip headers if it's not the first file
             if idx > 0:
                 df = df.iloc[1:]
