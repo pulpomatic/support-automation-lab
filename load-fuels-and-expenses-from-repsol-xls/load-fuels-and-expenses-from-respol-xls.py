@@ -429,9 +429,9 @@ def calculate_totals(percentage_tax: str, importe: str, importe_total: str):
     calculated_discount = Decimal(0)
     percentage_discount = Decimal(0)
 
-    if importe > importe_total:  # La operacion tiene descuento
+    if abs(importe) > abs(importe_total):  # La operacion tiene descuento
         calculated_discount = (importe_total - importe) / tax_subtraction
-        percentage_discount = ((importe - importe_total) / importe) * 100
+        percentage_discount = ((importe - importe_total) / abs(importe)) * 100
 
     calculated_tax = (subtotal + calculated_discount) * (percentage_tax / 100)
     calculated_total = subtotal + calculated_discount + calculated_tax
