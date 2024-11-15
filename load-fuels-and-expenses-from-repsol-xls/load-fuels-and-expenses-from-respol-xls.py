@@ -542,7 +542,7 @@ def process_and_send(
 # Función para enviar un batch de filas a la API
 def send_to_fuel_api(row, token):
     headers = {"Authorization": f"Bearer {token}"}
-    params = {"omitOdometerIfFails": True}
+    params = {"omitOdometerIfFails": "true"}
     response = requests.post(
         f"{BASE_URL}/fuels", data=row, headers=headers, params=params
     )
@@ -555,7 +555,7 @@ def send_to_fuel_api(row, token):
 
 def send_to_expense_api(row, token):
     headers = {"Authorization": f"Bearer {token}"}
-    params = {"omitOdometerIfFails": True}
+    params = {"omitOdometerIfFails": "true"}
     response = requests.post(
         f"{BASE_URL}/expenses", json=row, headers=headers, params=params
     )
