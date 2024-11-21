@@ -274,18 +274,14 @@ def map_data(
     if vehicle is None:
         raise ValueError(f"El vehículo con la placa {row_dict['MATRICULA']} no existe")
 
-    num_tarjeta = row_dict["NUM_TARJET"]
-
-    if (num_tarjeta is not None and len(num_tarjeta) > 16 and num_tarjeta[:3] == "000"):
-        num_tarjeta = num_tarjeta[-16:]
-
+    num_tarjeta = int(row_dict["NUM_TARJET"])
 
     payment_method = next(
         (
             item
             for item in payment_methods
             if row_dict["NUM_TARJET"] is not None
-            and item["slug"] == num_tarjeta
+            and item["slug"] == f"{num_tarjeta}"
         ),
         None,
     )
