@@ -274,18 +274,20 @@ def map_data(
     if vehicle is None:
         raise ValueError(f"El vehículo con la placa {row_dict['MATRICULA']} no existe")
 
+    num_tarjeta = int(row_dict["NUM_TARJET"])
+
     payment_method = next(
         (
             item
             for item in payment_methods
             if row_dict["NUM_TARJET"] is not None
-            and item["slug"] == row_dict["NUM_TARJET"]
+            and item["slug"] == f"{num_tarjeta}"
         ),
         None,
     )
     if payment_method is None:
         raise ValueError(
-            f"El medio de pago con el número {row_dict['NUM_TARJET']} no existe"
+            f"El medio de pago con el número {num_tarjeta} no existe"
         )
 
     location = next(
@@ -328,7 +330,7 @@ def map_data(
             (
                 item
                 for item in fuel_type_of_fuels
-                if operation_info["info"]["reference_code"]
+                if item["referenceCode"] is not None and operation_info["info"]["reference_code"]
                 == int(item["referenceCode"])
             ),
             None,
@@ -383,7 +385,7 @@ def map_data(
             (
                 item
                 for item in expense_types
-                if operation_info["info"]["reference_code"]
+                if item["referenceCode"] is not None and operation_info["info"]["reference_code"]
                 == int(item["referenceCode"])
             ),
             None,
@@ -536,7 +538,7 @@ def process_and_send(
 # Función para enviar un batch de filas a la API
 def send_to_fuel_api(row, token):
     headers = {"Authorization": f"Bearer {token}"}
-    params = {"omitOdometerIfFails": True}
+    params = {"omitOdometerIfFails": "true"}
     response = requests.post(
         f"{BASE_URL}/fuels", data=row, headers=headers, params=params
     )
@@ -549,7 +551,7 @@ def send_to_fuel_api(row, token):
 
 def send_to_expense_api(row, token):
     headers = {"Authorization": f"Bearer {token}"}
-    params = {"omitOdometerIfFails": True}
+    params = {"omitOdometerIfFails": "true"}
     response = requests.post(
         f"{BASE_URL}/expenses", json=row, headers=headers, params=params
     )
@@ -656,7 +658,10 @@ def configure_fuels_custom_fields(token, required_custom_fieds: list, type: str)
             f"Error al obtener campos personalizados {type}, el estatus devuelto {response.status_code}"
         )
     response_json = response.json()
-    custom_fields_saved = response_json["customFields"]["fields"]
+    if (response_json["customFields"] is None):
+        custom_fields_saved = []
+    else:
+        custom_fields_saved = response_json["customFields"]["fields"]
 
     saved_field_names = {field["name"] for field in custom_fields_saved}
     # Revisamos los campos necesarios
