@@ -8,10 +8,14 @@ from datetime import datetime
 from decimal import Decimal
 from functools import partial
 from typing import Any
+from dotenv import load_dotenv
+import uuid
 
 import pandas as pd
 import pytz
 import requests
+
+load_dotenv()
 
 # Directorios
 PENDING_DIR = os.path.join(os.path.dirname(__file__), "pending")
@@ -86,6 +90,11 @@ FUELS_CUSTOM_FIELDS_DEFINITION = EXPENSES_CUSTOM_FIELDS_DEFINITION + [
         "hidden": False,
     },
 ]
+
+def basic_auth(username, password):
+    from base64 import b64encode
+    token = b64encode(f"{username}:{password}".encode("utf-8")).decode("ascii")
+    return f"Basic {token}"
 
 
 # Configuración del logger
@@ -295,7 +304,7 @@ def map_data(
             item
             for item in locations
             if row_dict["COD_ESTABL"] is not None
-            and int(item["fiscal_code"]) == int(row_dict["COD_ESTABL"])
+            and int(item["fiscalCode"]) == int(row_dict["COD_ESTABL"])
         ),
         None,
     )
@@ -574,10 +583,105 @@ def load_product_to_fuel_types():
     return get_json_from_file(path)
 
 
-def load_locations():
-    path = os.path.join(os.path.dirname(__file__), "maps", "repsol-locations-bd.json")
-    return get_json_from_file(path)
+def load_locations(codes_list: list):
+    basic_user = os.environ.get("BASIC_AUTH_USER", "admin")
+    basic_password = os.environ.get("BASIC_AUTH_PASS", "admin")
 
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": basic_auth(basic_user, basic_password)
+    }
+    # convert code list to simply COD_ESTABL list for remove duplicateds and conserve original info
+    simply_codes_list = [item["COD_ESTABL"] for item in codes_list]
+    simply_codes_list = list(dict.fromkeys(simply_codes_list))
+
+    # split simply_codes_list in list of max 100 data
+    chunk_size = 100
+    chunks = [simply_codes_list[i:i + chunk_size] for i in range(0, len(simply_codes_list), chunk_size)]
+
+    try:
+        suppliers_data = []
+        for i, chunk in enumerate(chunks):
+            suppliers = send_to_get_suppliers_by_fiscal_codes(chunk)
+            suppliers_data = suppliers_data + suppliers
+
+        logger.info(f"suppliers loaded in file {len(simply_codes_list)}")
+        logger.info(f"All suppliers loaded {len(suppliers_data)}")
+
+        simply_fiscal_codes = {item["fiscalCode"] for item in suppliers_data}
+        missing_fiscal_codes = [code for code in simply_codes_list if code not in simply_fiscal_codes]
+        logger.info(f"missing_fiscal_codes: {len(missing_fiscal_codes)}")
+
+
+        if (len(missing_fiscal_codes) > 0):
+            uuid_namespace = uuid.UUID('0b5645c5-209e-44a7-bdaa-5c4888fc391b')
+            for idx, fiscal_code in enumerate(missing_fiscal_codes):
+                # find for get name of establ with fiscal_code for create supplier
+                establ_data = next(
+                    ( item for item in codes_list if item["COD_ESTABL"] == fiscal_code),
+                    None
+                )
+                supplier = send_to_create_supplier(establ_data, uuid_namespace)
+
+                suppliers_data.append(supplier)
+
+        return suppliers_data
+    except requests.RequestException as e:
+        logging.error(f"HTTP Request failed: {e}")
+        raise
+
+def get_establ_codes_list(files: list):
+    codes_list = []
+    for idx, file_name in enumerate(files, start=1):
+        file_path = os.path.join(PENDING_DIR, file_name)
+        df = pd.read_excel(file_path, sheet_name=0, dtype=str)
+
+        df["COD_ESTABL"] = df["COD_ESTABL"].str.zfill(15)
+        df_ab = df[["NOM_ESTABL", "COD_ESTABL"]]
+        json_value = df_ab.to_dict(orient="records")
+        codes_list = codes_list + json_value
+
+    clean_list = [dict(t) for t in {tuple(d.items()) for d in codes_list}]
+    return clean_list
+
+def send_to_get_suppliers_by_fiscal_codes(fiscal_codes: list):
+    basic_user = os.environ.get("BASIC_AUTH_USER", "admin")
+    basic_password = os.environ.get("BASIC_AUTH_PASS", "admin")
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": basic_auth(basic_user, basic_password)
+    }
+    params={
+        "fiscal_codes": json.dumps(fiscal_codes)
+    }
+    response = requests.get(
+        f"{BASE_URL}/suppliers/1/locations", headers=headers, params=params
+    )
+    return response.json()
+
+def send_to_create_supplier(establ_data, uuid_namespace):
+    basic_user = os.environ.get("BASIC_AUTH_USER", "admin")
+    basic_password = os.environ.get("BASIC_AUTH_PASS", "admin")
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": basic_auth(basic_user, basic_password)
+    }
+    cod_establ = establ_data["COD_ESTABL"]
+    origin_id = str(uuid.uuid5(uuid_namespace, f"REPSOL_SUPPLIER-{cod_establ}"))
+    supplier = {
+        "fiscalCode": cod_establ,
+        "description": f"Codigo de establecimiento: {cod_establ}",
+        "name": establ_data["NOM_ESTABL"],
+        "supplierTypeId": 71209,
+        "originId": origin_id,
+        "origin": "REPSOL"
+    }
+    response = requests.post(f"{BASE_URL}/suppliers/1/locations", json=supplier, headers=headers)
+    return response.json()
+    # return supplier
 
 def get_json_from_file(filename):
     with open(filename, "r", encoding="utf-8") as json_file:
@@ -716,13 +820,15 @@ def main():
         return
 
     # Precargamos los datos maestros
+    establ_codes = get_establ_codes_list(files)
+    locations = load_locations(establ_codes)
+
     vehicles, payment_methods, fuel_type_of_fuels, expense_types = get_all_entities(
         token
     )
 
     product_to_expense_types = load_product_to_expense_types()
     product_to_fuel_types = load_product_to_fuel_types()
-    locations = load_locations()
 
     configure_fuels_custom_fields(token, EXPENSES_CUSTOM_FIELDS_DEFINITION, "expenses")
     configure_fuels_custom_fields(token, FUELS_CUSTOM_FIELDS_DEFINITION, "fuels")
