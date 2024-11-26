@@ -675,7 +675,7 @@ def send_to_create_supplier(establ_data, uuid_namespace):
         "fiscalCode": cod_establ,
         "description": f"Codigo de establecimiento: {cod_establ}",
         "name": establ_data["NOM_ESTABL"],
-        "supplierTypeId": 71209,
+        "supplierTypeId": 91845,
         "originId": origin_id,
         "origin": "REPSOL"
     }
