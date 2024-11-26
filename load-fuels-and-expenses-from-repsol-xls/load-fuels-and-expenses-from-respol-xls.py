@@ -344,15 +344,15 @@ def map_data(
             ),
             None,
         )
-        price_per_unit = totals.get("subtotal") / float(row_dict["NUM_LITROS"])
+        price_per_unit = totals.get("subtotal") / float(row_dict["NUM_LITROS"]) if float(row_dict["NUM_LITROS"]) > 0 else 0
 
         discount_per_unit = (
             float(row_dict["IMPORTE"]) - float(row_dict["IMP_TOTAL"])
-        ) / float(row_dict["NUM_LITROS"])
+        ) / float(row_dict["NUM_LITROS"]) if float(row_dict["NUM_LITROS"]) > 0 else 0
 
         price_per_unit_final = float(totals.get("total")) / float(
             row_dict["NUM_LITROS"]
-        )
+        ) if float(row_dict["NUM_LITROS"]) else 0
 
         return {
             "is_fuel": True,
