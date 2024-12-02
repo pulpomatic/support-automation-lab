@@ -452,7 +452,7 @@ def calculate_totals(percentage_tax: str, importe: str, importe_total: str):
     totals = {
         "subtotal": float(subtotal),
         "discount": float(calculated_discount),
-        "discount_percentage": float(percentage_discount),
+        "discount_percentage": float(abs(percentage_discount)),
         "tax": float(calculated_tax),
         "total": float(calculated_total),
     }
