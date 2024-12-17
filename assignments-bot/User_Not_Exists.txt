@@ -1,0 +1,2 @@
+Usuario: JUAN CARLOS RODRIGUEZ GARCIA (juancarlos.rodriguez2@chubbfs.com) - Asignación no procesada: {'startDate': '2024-08-14T00:00:00.000Z', 'endDate': None, 'userId': None, 'vehicleId': None, 'odometer': 0}
+Usuario: JUAN CARLOS RODRIGUEZ GARCIA (juancarlos.rodriguez2@chubbfs.com) - Asignación no procesada: {'startDate': '2024-08-14T00:00:00.000Z', 'endDate': None, 'userId': None, 'vehicleId': None, 'odometer': 0}
