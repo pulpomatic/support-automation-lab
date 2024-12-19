@@ -41,7 +41,6 @@ class RentingLeasingLoader:
                     if line and not line.startswith("#"):
                         key, value = line.split('=', 1)
                         if key.strip() == var_name:
-                            print(f"Token cargado: {value.strip()}")
                             return value.strip()
                 raise ValueError(f"Variable de entorno {var_name} no encontrada en el archivo .env.")
         except FileNotFoundError:
@@ -123,7 +122,7 @@ class RentingLeasingLoader:
         """
         Genera un archivo CSV con los datos procesados.
         """
-        processed_data = self.process_data()  # Solo se procesa una vez
+        processed_data = self.process_data()
         df = pd.DataFrame(processed_data)
         df.to_csv(output_file, index=False, quoting=1)
         print(f"Archivo CSV generado: {output_file}")
@@ -139,11 +138,10 @@ class RentingLeasingLoader:
 
         successful_count = 0
         total_count = len(data)
-        failed_items = []  # Lista para almacenar los items que no se pudieron procesar
+        failed_items = []
 
         for idx, item in enumerate(data):
             try:
-                print(f"Sending item: {json.dumps(item, indent=2)}")
                 response = requests.post(self.API_URL, headers=headers, data=json.dumps(item), timeout=10)
                 if response.status_code == 201:
                     successful_count += 1
