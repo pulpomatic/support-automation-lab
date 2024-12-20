@@ -64,10 +64,7 @@ El bot válida que existan los siguientes campos en el archivo a subir:
 * Porcentaje impuesto
 * Descuento monetario
 * Impuesto monetario
-* Matricula
 * Email
-* Medio de pago
-* Proveedor
 
 _Nota: Podemos agregar esta información en el mismo archivo que se crea para la subida
 de Renting y Leasing, pero el nombre de los `headers` deben de ser iguales (incluyendo el asterísco)._
