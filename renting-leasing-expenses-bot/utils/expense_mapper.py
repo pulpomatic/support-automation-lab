@@ -28,9 +28,14 @@ class ExpenseMapper:
         }
         self.frequency_map = {
             "año": "year",
+            "anual": "year",
             "mes": "month",
+            "mensual": "month",
             "día": "day",
-            "semana": "week"
+            "dia": "day",
+            "diario": "day",
+            "semana": "week",
+            "semanal": "week"
         }
         self.translator = GoogleTranslator(source="en", target="es")
 
