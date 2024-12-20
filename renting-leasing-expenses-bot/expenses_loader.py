@@ -82,8 +82,6 @@ class ExpensesLoader:
         expense_mapper = ExpenseMapper()
         mapped_rows = []
 
-        vehicle_id_mapping = {"ABC-123": 2700975}
-
         for _, row in data_frame.iterrows():
             def convert_date(date_str):
                 if isinstance(date_str, str) and date_str.strip():
@@ -97,7 +95,6 @@ class ExpensesLoader:
             end_date = convert_date(row["Fecha fin"])
 
             user_id = self.user_id_mapping.get(row["Email"], None)
-            vehicle_id = vehicle_id_mapping.get(row["Matricula"], None)
 
             # Obtener valores de impuesto y descuento
             tax_percentage = self.convert_to_numeric(row["Porcentaje impuesto"])
@@ -140,9 +137,6 @@ class ExpensesLoader:
                 "discount": discount,
                 "total": client_total,
                 "userId": user_id,
-                "vehicleId": vehicle_id,
-                "paymentMethodId": 1873071,
-                "supplierId": 1,
                 "startDate": start_date,
                 "endDate": end_date,
                 "frecuency": frecuencia
