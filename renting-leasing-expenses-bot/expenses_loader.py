@@ -15,22 +15,19 @@ class ExpensesLoader:
         self.errors_dir = 'errors/'
         os.makedirs(self.errors_dir, exist_ok=True)
         
-        # Configurar el logger
         logging.basicConfig(
             level=logging.INFO,
             format='%(asctime)s - %(levelname)s - %(message)s',
             handlers=[
                 logging.FileHandler("expenses_loader.log"),
-                logging.StreamHandler()  # También mostrar en consola
+                logging.StreamHandler()
             ]
         )
         self.logger = logging.getLogger()
         
-        # Inicializar user_id_mapping
         self.user_id_mapping = self.fetch_user_id_mapping()
 
     def load_api_token(self, env_file_path=".env"):
-        """Carga el token de la API desde un archivo .env."""
         try:
             with open(env_file_path, "r") as file:
                 for line in file:
@@ -46,11 +43,9 @@ class ExpensesLoader:
         return response.status_code == 200
 
     def fetch_user_id_mapping(self):
-        """Obtiene el mapeo de emails a IDs de usuario desde la API."""
         try:
             headers = {'Authorization': f'Bearer {self.token}'}
             
-            # Primera consulta para obtener el total de filas
             response = requests.get(f"{self.users_api_url}?skip=0&take=1", headers=headers)
             response.raise_for_status()
             total_rows = response.json().get('_metadata', {}).get('_total_rows', 0)
@@ -59,19 +54,15 @@ class ExpensesLoader:
                 self.logger.warning("No se encontraron usuarios en la API.")
                 return {}
 
-            # Segunda consulta para obtener todos los usuarios
             response = requests.get(f"{self.users_api_url}?skip=0&take={total_rows}", headers=headers)
             response.raise_for_status()
             users = response.json().get('list', [])
             
-            # Construir el diccionario de mapeo
             user_id_mapping = {
                 user['email']: user['id']
                 for user in users
-                if user.get('email')  # Filtrar usuarios sin email
+                if user.get('email')
             }
-
-            self.logger.info(f"User ID mapping obtenido: {user_id_mapping}")
             return user_id_mapping
 
         except requests.RequestException as e:
@@ -96,13 +87,11 @@ class ExpensesLoader:
 
             user_id = self.user_id_mapping.get(row["Email"], None)
 
-            # Obtener valores de impuesto y descuento
             tax_percentage = self.convert_to_numeric(row["Porcentaje impuesto"])
             tax_currency = self.convert_to_numeric(row["Impuesto monetario"])
             discount_percentage = self.convert_to_numeric(row["Porcentaje descuento"])
             discount_currency = self.convert_to_numeric(row["Descuento monetario"])
 
-            # Asignar valores y tipos
             if tax_currency > 0:
                 tax = tax_currency
                 tax_type = "CURRENCY"
@@ -189,7 +178,6 @@ class ExpensesLoader:
             return 0
     
     def load_expenses(self):
-        """Carga el archivo y procesa cada fila."""
         if not self.validate_token():
             print("Token no válido.")
             return
@@ -236,7 +224,6 @@ class ExpensesLoader:
         print("Carga completa. Fin.")
 
     def log_failed_row(self, row, error_message):
-        """Registra filas que fallaron con su error."""
         log_entry = {
             "row": row,
             "error_message": error_message,
