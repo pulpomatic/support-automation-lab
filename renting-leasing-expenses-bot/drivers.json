@@ -1,0 +1,28 @@
+{
+    "list": [
+        {
+            "id": 1034077,
+            "name": "W000000",
+            "email": null
+        },
+        {
+            "id": 269797,
+            "name": "Julio Vázquez Álvarez",
+            "email": "julio.vazquez@getpulpo.com"
+        },
+        {
+            "id": 171052,
+            "name": "(Pulpo Support) Antonio Soto",
+            "email": "antonio.soto@getpulpo.com"
+        },
+        {
+            "id": 6,
+            "name": "(Pulpo) Armando Perdomo",
+            "email": "armando.perdomo@getpulpo.com"
+        }
+    ],
+    "_metadata": {
+        "_total_rows": 4,
+        "_config": []
+    }
+}

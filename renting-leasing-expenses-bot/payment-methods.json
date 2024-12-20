@@ -1,0 +1,39 @@
+{
+    "paymentMethods": [
+        {
+            "id": 1873071,
+            "name": "Test-Bot-Expenses",
+            "slug": "7890",
+            "supplier": "Repsol",
+            "archived": false,
+            "createdByUser": {
+                "id": 269797,
+                "name": "Julio Vázquez Álvarez"
+            },
+            "updatedByUser": {
+                "id": 269797,
+                "name": "Julio Vázquez Álvarez"
+            },
+            "createAt": "19/12/2024 10:36",
+            "updateAt": "19/12/2024 10:36",
+            "tags": [],
+            "origin": "PULPO",
+            "legacyCardId": null,
+            "balance": 0,
+            "expirationDate": null,
+            "segments": [],
+            "paymentMethodsTypeId": 74043,
+            "paymentMethodsType": "Tarjeta crédito",
+            "paymentMethodsStatusId": 80196,
+            "paymentMethodsStatus": "Activo",
+            "assignedDrivers": [],
+            "assignedVehicles": [],
+            "hasDocuments": false,
+            "checkinRequired": true
+        }
+    ],
+    "_metadata": {
+        "_total_rows": 1,
+        "_config": []
+    }
+}
