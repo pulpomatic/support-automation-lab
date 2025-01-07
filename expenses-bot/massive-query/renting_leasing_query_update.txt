@@ -1,0 +1,7 @@
+UPDATE public.scheduled_expenses
+SET 
+    vehicle_id = 3029816, 
+    supplier_id = 686303
+WHERE "name"='2023/R1450' 
+AND account_id = 1;
+
