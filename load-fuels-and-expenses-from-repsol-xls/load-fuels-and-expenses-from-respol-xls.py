@@ -537,6 +537,7 @@ def process_and_send(
             MAX_SECONDS_TO_SLEEP
         )
         # comentar send_request() para hacer pruebas sin necesidad de registrar datos
+        send_request()
         return {"success": True}
     except Exception as e:
         logger.error(
