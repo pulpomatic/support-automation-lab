@@ -34,6 +34,7 @@ Este script utiliza las siguientes librerías:
     ```bash
     pip install -r requirements.txt
     ```
+3. Crear un archivo `.env` que contenga las variables correspondientes, consulta el `.env.example`
 
 ## Configuración
 
@@ -48,10 +49,18 @@ este lo solicitará el script para poder cargar la información
     python load-fuels-and-expenses-from-respol-xls.py
     ```
 3. El script pedirá confirmación para procesar los archivos y un token de autorización para realizar las solicitudes a la API.
-4. Los resultados se almacenarán en:
+4. Considera asignar tu usuario a la cuenta a la cual vas a registrar operaciones antes de ejecutar el archivo
+5. Opcionalmente, vas a tener que asignarte segmentos para poder ver todos los vehículos, para ello puedes ejecutar el siguiente SQL
+```sql
+   UPDATE accounts_users
+   SET segments = (SELECT array(select id from segments s where account_id = $account_id))
+   where account_id = $account_id and user_id in (select id from users where email = $email);
+```
+6. Los resultados se almacenarán en:
     - **processed/**: registros exitosos (en archivos crudos separados).
     - **error/**: registros con errores o fallos.
     - **logs/**: archivos de log detallados de cada ejecución.
+7. Considera ejecutar el script en modo de prueba para verificar errores e inconsistencias, antes de persistir los combustibles y gastos.
 
 ## Configuración de Logs
 

@@ -2,18 +2,18 @@ import json
 import logging
 import os
 import time
+import uuid
 from asyncio import Future
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from decimal import Decimal
 from functools import partial
 from typing import Any
-from dotenv import load_dotenv
-import uuid
 
 import pandas as pd
 import pytz
 import requests
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -27,7 +27,7 @@ MAX_WORKERS = 5
 MAX_SECONDS_TO_SLEEP = 1
 
 # URL de la API de ejemplo
-BASE_URL = "https://eu1.getpulpo.com/api/v1"
+BASE_URL = os.environ.get("BASE_URL")
 
 CUSTOM_FIELD_DEFAULT_SECTION_NAME = "Campos de Repsol"
 EXPENSES_CUSTOM_FIELDS_DEFINITION = [
@@ -535,8 +535,8 @@ def process_and_send(
         )
         time.sleep(
             MAX_SECONDS_TO_SLEEP
-        )  # Descomentar y comentar send_request() para hacer pruebas sin necesidad de registrar datos
-        # send_request()
+        )
+        # comentar send_request() para hacer pruebas sin necesidad de registrar datos
         return {"success": True}
     except Exception as e:
         logger.error(
@@ -586,14 +586,6 @@ def load_product_to_fuel_types():
 
 
 def load_locations(codes_list: list):
-    basic_user = os.environ.get("BASIC_AUTH_USER", "admin")
-    basic_password = os.environ.get("BASIC_AUTH_PASS", "admin")
-
-    headers = {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "Authorization": basic_auth(basic_user, basic_password)
-    }
     # convert code list to simply COD_ESTABL list for remove duplicateds and conserve original info
     simply_codes_list = [item["COD_ESTABL"] for item in codes_list]
     simply_codes_list = list(dict.fromkeys(simply_codes_list))
