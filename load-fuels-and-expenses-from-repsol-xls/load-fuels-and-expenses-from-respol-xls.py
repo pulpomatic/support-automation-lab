@@ -270,7 +270,7 @@ def map_data(
     product_to_expense_types: list,
     expense_types: list,
 ):
-    cleaned_matricula = clean_registration_number(row_dict["MATRICULA"])
+    cleaned_matricula = clean_registration_number(row_dict["MATRICULA"]) if row_dict["MATRICULA"] is not None else None
     vehicle = next(
         (
             item
@@ -280,24 +280,36 @@ def map_data(
         ),
         None,
     )
-    if vehicle is None:
-        raise ValueError(f"El vehículo con la placa {row_dict['MATRICULA']} no existe")
-
-    num_tarjeta = int(row_dict["NUM_TARJET"])
-
+    num_tarjeta = int(row_dict["NUM_TARJET"]) if row_dict["NUM_TARJET"] is not None else None
     payment_method = next(
         (
             item
             for item in payment_methods
             if row_dict["NUM_TARJET"] is not None
-            and item["slug"] == f"{num_tarjeta}"
+               and item["slug"] == f"{num_tarjeta}"
         ),
         None,
     )
-    if payment_method is None:
-        raise ValueError(
-            f"El medio de pago con el número {num_tarjeta} no existe"
-        )
+
+    if cleaned_matricula and num_tarjeta:
+        if not vehicle and not payment_method:
+            raise ValueError(
+                f"El vehículo con la placa {row_dict['MATRICULA']} y el medio de pago con el número {num_tarjeta} no existen")
+
+        if not vehicle:
+            raise ValueError(f"El vehículo con la placa {row_dict['MATRICULA']} no existe")
+
+        if not payment_method:
+            raise ValueError(
+                f"El medio de pago con el número {num_tarjeta} no existe"
+            )
+    else:
+        if cleaned_matricula and not vehicle:
+            raise ValueError(f"El vehículo con la placa {row_dict['MATRICULA']} no existe")
+        if num_tarjeta and not payment_method:
+            raise ValueError(
+                f"El medio de pago con el número {num_tarjeta} no existe"
+            )
 
     location = next(
         (
@@ -654,6 +666,11 @@ def send_to_get_suppliers_by_fiscal_codes(fiscal_codes: list):
     response = requests.get(
         f"{BASE_URL}/suppliers/1/locations", headers=headers, params=params
     )
+    if response.status_code != 200:
+        print(response.json())
+        raise ValueError(
+            f"Error al obtener locations, el estatus devuelto {response.status_code}"
+        )
     return response.json()
 
 def send_to_create_supplier(establ_data, uuid_namespace):

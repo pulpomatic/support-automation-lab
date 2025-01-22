@@ -4,6 +4,8 @@ Este script permite procesar archivos Excel que son exportados desde misolred co
 enviándola a una API y generando registros de éxito o error en archivos separados. 
 Está diseñado para procesar en paralelo varios registros a la vez, con pausas configurables entre cada batch, y generar archivos de log para cada ejecución.
 
+⚠️Es muy importante considerar que esta carga no evalúa si ya fueron previamente ejecutadas o si esas operaciones existen, por lo tanto, cada vez que corras el script corres el riesgo de duplicar datos⚠️
+
 ## Estructura del Proyecto
 
 - `pending/`: carpeta donde se colocan los archivos de datos pendientes de procesar.
@@ -51,16 +53,43 @@ este lo solicitará el script para poder cargar la información
 3. El script pedirá confirmación para procesar los archivos y un token de autorización para realizar las solicitudes a la API.
 4. Considera asignar tu usuario a la cuenta a la cual vas a registrar operaciones antes de ejecutar el archivo
 5. Opcionalmente, vas a tener que asignarte segmentos para poder ver todos los vehículos, para ello puedes ejecutar el siguiente SQL
-```sql
-   UPDATE accounts_users
-   SET segments = (SELECT array(select id from segments s where account_id = $account_id))
-   where account_id = $account_id and user_id in (select id from users where email = $email);
-```
+   ```sql
+      UPDATE accounts_users
+      SET segments = (SELECT array(select id from segments s where account_id = $account_id))
+      where account_id = $account_id and user_id in (select id from users where email = $email);
+   ```
 6. Los resultados se almacenarán en:
     - **processed/**: registros exitosos (en archivos crudos separados).
     - **error/**: registros con errores o fallos.
     - **logs/**: archivos de log detallados de cada ejecución.
-7. Considera ejecutar el script en modo de prueba para verificar errores e inconsistencias, antes de persistir los combustibles y gastos.
+7. Considera ejecutar el script en modo de prueba comentando `send_request()` para verificar errores e inconsistencias, antes de persistir los combustibles y gastos.
+esto te ayudará a ver si se mapeó bien las operaciones y que no existan errores.
+
+_Hay que estar muy atento en los archivos procesados y los archivos de error, ya que puede darse el caso que una operación no se mapee correctamente o que la api de error,
+haciendo que se te descuadre por completo la carga. 
+Si hay registros que te dan error, puedes corregir lo que sea necesario y luego intentar cargarlos de nuevo con el archivo de error_
+
+## Como comprobar que se cargaron bien las operaciones?
+
+Esta parte no es complicada, una vez terminada la carga podemos hacer una sumatoria de la columna IMP_TOTAL en excel, esto nos dará un valor por ejemplo 50.000,
+entonces luego corriendo este query:
+```sql
+   select count(e.*), sum(e.total) from expenses e where e.created_by_user_id = $user_id and e.account_id = $account_id and e.create_at >= $current_date;
+```
+Cambiando los parámetros 
+- user_id: El usuario con el que generaste el token
+- account_id: La cuenta
+- current_date: La fecha en la que realizaste la carga
+
+Podemos obtener un valor exactamente igual al del archivo, en este caso nos debería dar 50.000 y el conteo total de filas que tiene el archivo.
+
+_Nota: En caso alterno debemos contabilizar los archivos procesados con éxito, ya que en el camino suele dar errores por mapeo o por procesamiento y nos puede dar falsos positivos_
+
+## Errores frecuentes
+
+- Respuestas 502 de la API: Si la operación da este error al ser cargada, puedes repetir el proceso con el archivo de error
+- Vehículos o Medios de Pago no encontrados: Cuando esto sucede debes verificar de que no sea un tema de permisos o segmentos, puedes comprobar la existencia de ambos
+yendo a la base de datos y consultando a ver si existen, en caso de que no hay que ir con el CuSu o el cliente para que los creen.
 
 ## Configuración de Logs
 
