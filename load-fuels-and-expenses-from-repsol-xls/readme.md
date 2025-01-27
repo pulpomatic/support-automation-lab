@@ -40,8 +40,17 @@ Este script utiliza las siguientes librerías:
 
 ## Configuración
 
-Asegurate de asociar un usuario a la cuenta destino, luego iniciar sesión, muy importante seleccionar la cuenta y copiarte el token,
+Asegura estar asociado con un usuario a la cuenta destino, luego iniciar sesión, muy importante seleccionar la cuenta y copiarte el token,
 este lo solicitará el script para poder cargar la información
+
+Luego verificar que tengas todos los segmentos y por último configurar la zona horaria de tu usuario a Madrid.
+
+Para configurar los segmentos a tu usuario puedes ejecutar el siguiente SQL
+   ```sql
+      UPDATE accounts_users
+      SET segments = (SELECT array(select id from segments s where account_id = $account_id))
+      where account_id = $account_id and user_id in (select id from users where email = $email);
+   ```
 
 ## Ejecución
 
@@ -51,19 +60,12 @@ este lo solicitará el script para poder cargar la información
     python load-fuels-and-expenses-from-respol-xls.py
     ```
 3. El script pedirá confirmación para procesar los archivos y un token de autorización para realizar las solicitudes a la API.
-4. Considera asignar tu usuario a la cuenta a la cual vas a registrar operaciones antes de ejecutar el archivo
-5. Opcionalmente, vas a tener que asignarte segmentos para poder ver todos los vehículos, para ello puedes ejecutar el siguiente SQL
-   ```sql
-      UPDATE accounts_users
-      SET segments = (SELECT array(select id from segments s where account_id = $account_id))
-      where account_id = $account_id and user_id in (select id from users where email = $email);
-   ```
+4. Considera ejecutar el script en modo de prueba colocando la T al inicio
+5. Luego puedes ejecutar el script en modo P de persistir para que se guarde en nuestra base de datos
 6. Los resultados se almacenarán en:
     - **processed/**: registros exitosos (en archivos crudos separados).
     - **error/**: registros con errores o fallos.
     - **logs/**: archivos de log detallados de cada ejecución.
-7. Considera ejecutar el script en modo de prueba comentando `send_request()` para verificar errores e inconsistencias, antes de persistir los combustibles y gastos.
-esto te ayudará a ver si se mapeó bien las operaciones y que no existan errores.
 
 _Hay que estar muy atento en los archivos procesados y los archivos de error, ya que puede darse el caso que una operación no se mapee correctamente o que la api de error,
 haciendo que se te descuadre por completo la carga. 

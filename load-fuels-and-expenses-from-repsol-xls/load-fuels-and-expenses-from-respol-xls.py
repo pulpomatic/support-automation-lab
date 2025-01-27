@@ -354,6 +354,11 @@ def map_data(
         None,
     )
 
+    if is_not_empty(row_dict["COD_CONDUCTOR"]) and not driver:
+        raise ValueError(
+            f"El conductor con el nombre {row_dict['COD_CONDUCTOR']} no existe"
+        )
+
     location = next(
         (
             item
@@ -377,7 +382,7 @@ def map_data(
     date = local_dt.astimezone(pytz.UTC).isoformat()
 
     kilometers = (
-        int(row_dict["KILOMETROS"]) if int(row_dict["KILOMETROS"]) > 0 else None
+        int(row_dict["KILOMETROS"]) if int(row_dict["KILOMETROS"]) > 0 and vehicle is not None else None
     )
 
     operation_info = get_operation_type_info(
@@ -594,13 +599,13 @@ def process_and_send(
         )
         if testing_mode:
             logger.info(
-                "Testing mode activado, omitiendo envío al API 🪲"
+                "Testing mode activado, omitiendo envío al API"
             )
         else:
             logger.info(
-                "Persist mode activado, enviando al API ⚠️"
+                "Persist mode activado, enviando al API"
             )
-            #send_request()
+            send_request()
 
         return {"success": True}
     except Exception as e:
@@ -976,7 +981,7 @@ def main():
         if expenses_len > 0:
             logger.info("Procesando Gastos")
             processed_expenses, error_expenses = process_data(
-                expenses, file_name, token, False
+                expenses, file_name, token, False, running_type == 'T'
             )
             if len(processed_expenses) > 0:
                 save_raw_data(processed_expenses, file_name, "gastos", PROCESSED_DIR)
