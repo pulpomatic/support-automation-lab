@@ -1,8 +1,10 @@
-import requests
 import os
 import time
 from datetime import datetime
+
+import requests
 from dotenv import load_dotenv
+
 from DriverLoader import DriverLoader
 
 # Cargar las variables de entorno
@@ -164,7 +166,7 @@ def process_assignments(file_data, user_ids, vehicles_data, api):
         # Buscar el userId
         user_id = None
         for uid, (name, user_email) in user_ids.items():
-            if name == conductor  user_email == email:
+            if name == conductor:  #user_email == email:
                 user_id = uid
                 break
 
