@@ -167,6 +167,32 @@ def get_all_vehicles(token):
         for vehicle in vehicles
     ]
 
+def get_all_drivers(token):
+    headers = {"Authorization": f"Bearer {token}"}
+    params = {
+        "skip": 0,
+        "take": 0,
+        "userType": 4
+    }
+    response = requests.get(f"{BASE_URL}/users", headers=headers, params=params)
+    if response.status_code != 200:
+        raise ValueError(
+            f"Error al obtener conductores, el estatus devuelto {response.status_code}"
+        )
+    response_json = response.json()
+    drivers = response_json["list"]
+    if len(drivers) == 0:
+        raise ValueError("No hay conductores asociados a la cuenta")
+
+    return [
+        {
+            "id": driver["id"],
+            "name": clean_registration_number(
+                driver["name"]
+            ),
+        }
+        for driver in drivers
+    ]
 
 def get_all_catalogs(token, catalog_type):
     headers = {"Authorization": f"Bearer {token}"}
@@ -220,12 +246,14 @@ def get_all_payment_methods(token):
 def get_all_entities(token: str):
     vehicles = get_all_vehicles(token)
     logger.info(f"All vehicles loaded {len(vehicles)}")
+    drivers = get_all_drivers(token)
+    logger.info(f"All drivers loaded {len(drivers)}")
     payment_methods = get_all_payment_methods(token)
     logger.info(f"All payment methods loaded {len(payment_methods)}")
     fuel_type_of_fuels = get_all_catalogs(token, "FUEL-TYPES-OF-FUELS")
     expense_types = get_all_catalogs(token, "EXPENSES-TYPES")
     logger.info(f"All catalogs loaded")
-    return vehicles, payment_methods, fuel_type_of_fuels, expense_types
+    return vehicles, drivers, payment_methods, fuel_type_of_fuels, expense_types
 
 
 def try_to_map_data(
@@ -233,6 +261,7 @@ def try_to_map_data(
     row_dict,
     filename: str,
     vehicles: list,
+    drivers: list,
     payment_methods: list,
     locations: list,
     product_to_fuel_types: list,
@@ -245,6 +274,7 @@ def try_to_map_data(
             row_dict,
             filename,
             vehicles,
+            drivers,
             payment_methods,
             locations,
             product_to_fuel_types,
@@ -257,12 +287,15 @@ def try_to_map_data(
         logger.error(f"Error mapeando registro en el indice {index}, {str(e)}")
         return {"success": False, "error": str(e)}
 
+def is_not_empty(str: str) -> bool:
+    return bool(str) or str != ""
 
 # Función para mapear los gastos y combustibles
 def map_data(
     row_dict,
     filename: str,
     vehicles: list,
+    drivers: list,
     payment_methods: list,
     locations: list,
     product_to_fuel_types: list,
@@ -270,7 +303,7 @@ def map_data(
     product_to_expense_types: list,
     expense_types: list,
 ):
-    cleaned_matricula = clean_registration_number(row_dict["MATRICULA"]) if row_dict["MATRICULA"] is not None else None
+    cleaned_matricula = clean_registration_number(row_dict["MATRICULA"]) if is_not_empty(row_dict["MATRICULA"]) else None
     vehicle = next(
         (
             item
@@ -280,12 +313,12 @@ def map_data(
         ),
         None,
     )
-    num_tarjeta = int(row_dict["NUM_TARJET"]) if row_dict["NUM_TARJET"] is not None else None
+    num_tarjeta = int(row_dict["NUM_TARJET"]) if is_not_empty(row_dict["NUM_TARJET"]) else None
     payment_method = next(
         (
             item
             for item in payment_methods
-            if row_dict["NUM_TARJET"] is not None
+            if is_not_empty(row_dict["NUM_TARJET"])
                and item["slug"] == f"{num_tarjeta}"
         ),
         None,
@@ -310,6 +343,16 @@ def map_data(
             raise ValueError(
                 f"El medio de pago con el número {num_tarjeta} no existe"
             )
+
+    driver = next(
+        (
+            item
+            for item in drivers
+            if is_not_empty(row_dict["COD_CONDUCTOR"])
+               and item["name"] == row_dict["COD_CONDUCTOR"]
+        ),
+        None,
+    )
 
     location = next(
         (
@@ -380,12 +423,12 @@ def map_data(
                 "total": totals.get("total"),
                 "date": date,
                 "fuelTypeId": fuel_type_of_fuel["id"],
-                "vehicleId": vehicle["id"],
-                "driverId": None,
+                "vehicleId": None if not vehicle else vehicle["id"],
+                "paymentMethodId": None if not payment_method else payment_method["id"],
+                "driverId": None if not driver else driver["id"],
                 "supplierId": 1,  # Supplier Repsol
                 "locationId": location["id"],
                 "reference": None,
-                "paymentMethodId": payment_method["id"],
                 "odometer": kilometers,
                 "customFieldsMetadata": json.dumps(
                     {
@@ -425,11 +468,11 @@ def map_data(
                 "subtotal": totals.get("subtotal"),
                 "date": date,
                 "expenseTypeId": expense_type["id"],
-                "vehicleId": vehicle["id"],
-                "driverId": None,
+                "vehicleId": None if not vehicle else vehicle["id"],
+                "paymentMethodId": None if not payment_method else payment_method["id"],
+                "driverId": None if not driver else driver["id"],
                 "supplierId": 1,  # Supplier Repsol
                 "locationId": location["id"],
-                "paymentMethodId": payment_method["id"],
                 "odometer": kilometers,
                 "customFieldsMetadata": {
                     "cf_repsolv2_raw_filename": filename,
@@ -485,7 +528,7 @@ def calculate_totals(percentage_tax: str, importe: str, importe_total: str):
     return totals
 
 
-def process_data(data: list[dict], file_name: str, token: str, is_fuel: bool):
+def process_data(data: list[dict], file_name: str, token: str, is_fuel: bool, testing_mode: bool):
     total_rows = len(data)
     if total_rows == 0:
         logger.info("No hay nada que procesar")
@@ -513,6 +556,7 @@ def process_data(data: list[dict], file_name: str, token: str, is_fuel: bool):
                     file_name,
                     token,
                     is_fuel,
+                    testing_mode
                 )
                 raw_row = row["raw"]
                 futures.append((future, raw_row))
@@ -534,7 +578,7 @@ def process_data(data: list[dict], file_name: str, token: str, is_fuel: bool):
 
 # Función para procesar y transformar una fila
 def process_and_send(
-    row, row_idx: int, total_rows: int, file_name: str, token: str, is_fuel: bool
+    row, row_idx: int, total_rows: int, file_name: str, token: str, is_fuel: bool, testing_mode: bool
 ):
     send_request = (
         partial(send_to_fuel_api, row, token)
@@ -548,8 +592,16 @@ def process_and_send(
         time.sleep(
             MAX_SECONDS_TO_SLEEP
         )
-        # comentar send_request() para hacer pruebas sin necesidad de registrar datos
-        send_request()
+        if testing_mode:
+            logger.info(
+                "Testing mode activado, omitiendo envío al API 🪲"
+            )
+        else:
+            logger.info(
+                "Persist mode activado, enviando al API ⚠️"
+            )
+            #send_request()
+
         return {"success": True}
     except Exception as e:
         logger.error(
@@ -667,10 +719,9 @@ def send_to_get_suppliers_by_fiscal_codes(fiscal_codes: list):
         f"{BASE_URL}/suppliers/1/locations", headers=headers, params=params
     )
     if response.status_code != 200:
-        print(response.json())
-        raise ValueError(
-            f"Error al obtener locations, el estatus devuelto {response.status_code}"
-        )
+        logger.info(f"Error al obtener locations, el estatus devuelto {response.status_code}")
+        response.raise_for_status()
+
     return response.json()
 
 def send_to_create_supplier(establ_data, uuid_namespace):
@@ -823,6 +874,11 @@ def main():
         logger.info("Operación cancelada.")
         return
 
+    running_type = input("¿En que modo vas a ejecutar, T: Testear para verificar posibles errores de mapeo *Recomendado si es primera vez*, P: Persistir? (T/P): ").strip().upper()
+    if running_type not in ["T", "P"]:
+        logger.info("Opción incorrecta, operación cancelada.")
+        return
+
     # Descomentar cuando se desee usar bearer token desde el archivo .env
     # token = os.environ.get('BEARER_TOKEN')
 
@@ -838,7 +894,7 @@ def main():
     establ_codes = get_establ_codes_list(files)
     locations = load_locations(establ_codes)
 
-    vehicles, payment_methods, fuel_type_of_fuels, expense_types = get_all_entities(
+    vehicles, drivers, payment_methods, fuel_type_of_fuels, expense_types = get_all_entities(
         token
     )
 
@@ -852,7 +908,7 @@ def main():
     for idx, file_name in enumerate(files, start=1):
         logger.info(f"Procesando archivo {file_name} ({idx}/{len(files)})")
         file_path = os.path.join(PENDING_DIR, file_name)
-        df = pd.read_excel(file_path, sheet_name=0, dtype=str)
+        df = pd.read_excel(file_path, sheet_name=0, dtype=str, keep_default_na=False)
         total_rows = len(df)
 
         if total_rows == 0:
@@ -874,6 +930,7 @@ def main():
                 row_dict,
                 file_name,
                 vehicles,
+                drivers,
                 payment_methods,
                 locations,
                 product_to_fuel_types,
@@ -910,7 +967,7 @@ def main():
 
         if fuels_len > 0:
             logger.info("Procesando Combustibles")
-            processed_fuels, error_fuels = process_data(fuels, file_name, token, True)
+            processed_fuels, error_fuels = process_data(fuels, file_name, token, True, running_type == 'T')
             if len(processed_fuels):
                 save_raw_data(processed_fuels, file_name, "combustibles", PROCESSED_DIR)
             if len(error_fuels) > 0:
