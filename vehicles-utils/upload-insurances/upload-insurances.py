@@ -344,7 +344,6 @@ def update_vehicle(vehicle_id, data):
         "Content-Type": "application/json",
     }
     params = {}
-    print(data)
     response = requests.put(
         f"{BASE_URL}/vehicles/{vehicle_id}", json=data, headers=headers, params=params
     )
