@@ -1,6 +1,7 @@
 import logging
 import os
 import requests
+import time
 from datetime import datetime
 
 import pandas as pd
@@ -22,14 +23,29 @@ MAX_SECONDS_TO_SLEEP = 2
 if not os.path.exists(LOG_DIR):
     os.makedirs(LOG_DIR)
 logging.basicConfig(
-    filename=os.path.join(LOG_DIR, f"process_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"),
+    filename=os.path.join(
+        LOG_DIR, f"process_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+    ),
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    format="%(asctime)s - %(levelname)s - %(message)s",
 )
 
 # Listas de referencia
 TAX_TYPES = {"Porcentaje": "PERCENTAGE", "Moneda": "CURRENCY"}
-PAYMENT_FREQUENCIES = {"Diario": "day", "Semanal": "week", "Mensual": "month", "Anual": "year"}
+PAYMENT_FREQUENCIES = {
+    "Diario": "day",
+    "Semanal": "week",
+    "Mensual": "month",
+    "Anual": "year",
+}
+
+
+def convert_date_to_iso_format(date: datetime) -> str:
+    """
+    Convierte una fecha al formato ISO 8601 'YYYY-MM-DDTHH:MM:SS.sssZ'.
+    """
+    # Convertimos al formato ISO 8601
+    return date.strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
 
 def is_not_empty(str: str) -> bool:
@@ -61,9 +77,15 @@ def get_all_vehicles():
     return [
         {
             "id": vehicle["id"],
+            "registration_number_v1": vehicle["registrationNumber"],
             "registration_number": clean_registration_number(
                 vehicle["registrationNumber"]
             ),
+            "name": vehicle["name"],
+            "vehicle_status_id": vehicle["statusId"],
+            "vehicle_type": vehicle["type"],
+            "property_type": vehicle["property"],
+            "fuel_type": vehicle["fuel"],
         }
         for vehicle in vehicles
     ]
@@ -126,7 +148,23 @@ def get_all_entities():
     insurance_types = get_all_catalogs("INSURANCE_TYPES")
     logging.info(f"All insurance types loaded {len(insurance_types)}")
 
-    return vehicles, suppliers, insurance_types
+    vehicle_types = get_all_catalogs("VEHICLES_TYPES")
+    logging.info(f"All vehicle types loaded {len(vehicle_types)}")
+
+    vehicle_property_types = get_all_catalogs("PROPERTIES_TYPES")
+    logging.info(f"All vehicle property types loaded {len(vehicle_property_types)}")
+
+    vehicle_fuel_types = get_all_catalogs("FUEL_TYPES")
+    logging.info(f"All vehicle fuel types loaded {len(vehicle_fuel_types)}")
+
+    return (
+        vehicles,
+        suppliers,
+        insurance_types,
+        vehicle_types,
+        vehicle_property_types,
+        vehicle_fuel_types,
+    )
 
 
 # Función para procesar archivos
@@ -137,7 +175,14 @@ def process_excel_files():
         os.makedirs(ERROR_DIR)
 
     # Obtenemos los catálogos
-    vehicles, suppliers, insurance_types = get_all_entities()
+    (
+        vehicles,
+        suppliers,
+        insurance_types,
+        vehicle_types,
+        vehicle_property_types,
+        vehicle_fuel_types,
+    ) = get_all_entities()
 
     for file in os.listdir(PENDING_DIR):
         if file.endswith(".xlsx"):
@@ -149,16 +194,22 @@ def process_excel_files():
 
                 for index, row in df.iterrows():
                     try:
-                        vehicle_id = get_vehicle_id(row["Matrícula"], vehicles)
-
-                        mapped_data = try_to_map(row, suppliers, insurance_types)
+                        vehicle_id, mapped_data = try_to_map(
+                            row,
+                            vehicles,
+                            suppliers,
+                            insurance_types,
+                            vehicle_types,
+                            vehicle_property_types,
+                            vehicle_fuel_types,
+                        )
 
                         update_vehicle(vehicle_id, mapped_data)
 
                         processed_rows.append(mapped_data)
 
                         logging.info(
-                            f"Esperando {MAX_SECONDS_TO_SLEEP} segundos antes de seguir con el siguiente registro."
+                            f"Vehículo {vehicle_id} actualizado. Esperando {MAX_SECONDS_TO_SLEEP} segundos para continuar."
                         )
                         time.sleep(MAX_SECONDS_TO_SLEEP)
                     except Exception as e:
@@ -171,39 +222,69 @@ def process_excel_files():
 
 
 # Función de mapeo
-def try_to_map(row, suppliers, insurance_types):
+def try_to_map(
+    row,
+    vehicles,
+    suppliers,
+    insurance_types,
+    vehicle_types,
+    vehicle_property_types,
+    vehicle_fuel_types,
+):
     try:
+        vehicle = get_vehicle(row["Matrícula"], vehicles)
+
         mapped_data = {
-            "insurancePolicyNumber": row["Número de Poliza"],
+            # Vehicle
+            "name": vehicle["name"],
+            "registrationNumber": vehicle["registration_number_v1"],
+            "vehicleStatusId": vehicle["vehicle_status_id"],
+            "vehicleTypeId": get_catalog_id(vehicle["vehicle_type"], vehicle_types),
+            "propertyTypeId": get_catalog_id(
+                vehicle["property_type"], vehicle_property_types
+            ),
+            "fuelTypeId": get_catalog_id(vehicle["fuel_type"], vehicle_fuel_types),
+            # Insurance
+            "insurancePolicyNumber": str(row["Número de Poliza"]),
             "insuranceSupplierId": get_supplier_id(row["Proveedor"], suppliers),
-            "insuranceStartDate": pd.to_datetime(row["Fecha inicio"], format="%d %m %Y").date(),
-            "insuranceEndDate": pd.to_datetime(row["Fecha fin"], format="%d %m %Y").date(),
-            "insuranceSubtotal": float(row["Prima Subtotal"].strip()),
-            "insuranceTaxType": TAX_TYPES[row["Tipo de Impuesto"]] if row["Tipo de Impuesto"] else "PERCENTAGE",
-            "insuranceTax": float(row["Valor de Impuesto"].replace("%", "")),
-            "insuranceTotalAmount": float(row["Prima Total"].strip()),
-            "insuranceTypeId": get_catalog_id(row["Tipo de Seguro"], insurance_types),
+            "insuranceStartDate": convert_date_to_iso_format(
+                pd.to_datetime(row["Fecha inicio"], format="%d %m %Y").date()
+            ),
+            "insuranceEndDate": convert_date_to_iso_format(
+                pd.to_datetime(row["Fecha fin"], format="%d %m %Y").date()
+            ),
+            "insuranceSubtotal": float(row["Prima Subtotal"]),
+            "insuranceTaxType": TAX_TYPES.get(
+                row.get("Tipo de Impuesto"), "PERCENTAGE"
+            ),
+            "insuranceTax": float(str(row["% impuesto"]).replace("%", "")),
+            "insuranceTotalAmount": float(row["Prima Total"]),
+            "insuranceTypeId": get_catalog_id(row["Tipo De Seguro"], insurance_types),
             "insurancePaymentFrequency": PAYMENT_FREQUENCIES[row["Frecuencia de Pago"]],
-            "createInsuranceScheduledExpense": bool(row["Crear Gasto Programado"]),
+            "createInsuranceScheduledExpense": bool(row.get("Crear Gasto Programado")),
         }
 
         total_calculated = mapped_data["insuranceSubtotal"]
         if mapped_data["insuranceTaxType"] == "PERCENTAGE":
-            total_calculated *= (1 + mapped_data["insuranceTax"] / 100)
+            total_calculated *= 1 + mapped_data["insuranceTax"] / 100
         elif mapped_data["insuranceTaxType"] == "CURRENCY":
             total_calculated += mapped_data["insuranceTax"]
 
         if round(total_calculated, 4) != round(mapped_data["insuranceTotalAmount"], 4):
             raise ValueError("Diferencia en el cálculo del total de prima")
 
-        return mapped_data
+        return vehicle["id"], mapped_data
     except Exception as e:
         raise ValueError(f"Error al mapear fila: {str(e)}")
 
 
 # Función para obtener vehicle ID
-def get_vehicle_id(registration_number, vehicles):
-    cleaned_registration_number = clean_registration_number(registration_number) if is_not_empty(registration_number) else None
+def get_vehicle(registration_number, vehicles):
+    cleaned_registration_number = (
+        clean_registration_number(registration_number)
+        if is_not_empty(registration_number)
+        else None
+    )
 
     vehicle = next(
         (
@@ -218,7 +299,7 @@ def get_vehicle_id(registration_number, vehicles):
     if vehicle is None:
         raise ValueError(f"Vehículo '{registration_number}' no encontrado")
 
-    return vehicle["id"]
+    return vehicle
 
 
 # Función para obtener supplier ID
@@ -245,8 +326,7 @@ def get_catalog_id(catalog_name, catalogs):
         (
             item
             for item in catalogs
-            if catalog_name is not None
-            and item["name"].lower() == catalog_name.lower()
+            if catalog_name is not None and item["name"].lower() == catalog_name.lower()
         ),
         None,
     )
@@ -260,16 +340,16 @@ def get_catalog_id(catalog_name, catalogs):
 # Función para actualizar el vehículo por su ID
 def update_vehicle(vehicle_id, data):
     headers = {
+        "Authorization": f"Bearer {BEARER_TOKEN}",
         "Content-Type": "application/json",
-        "Accept": "application/json",
-        "Authorization": f"Bearer {BEARER_TOKEN}"
     }
     params = {}
+    print(data)
     response = requests.put(
-        f"{BASE_URL}/vehicles/{vehicle_id}", data=data, headers=headers, params=params
+        f"{BASE_URL}/vehicles/{vehicle_id}", json=data, headers=headers, params=params
     )
-    if response.status_code != 201:
-        logger.info(
+    if response.status_code != 200:
+        logging.info(
             f"Registrar combustible, error code {response.status_code}, {response.text}"
         )
         raise ValueError(f"Error: {response.status_code} {response.text}")
