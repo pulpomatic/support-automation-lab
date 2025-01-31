@@ -62,6 +62,21 @@ def clean_registration_number(registration_number):
     return re.sub(r"[^a-zA-Z0-9]", "", registration_number)
 
 
+def validate_total_calculations(subtotal, tax_type, tax, total):
+    if subtotal is not None:
+        total_calculated = subtotal
+
+        if tax_type == "PERCENTAGE":
+            total_calculated *= 1 + tax / 100
+        elif tax_type == "CURRENCY":
+            total_calculated += tax
+
+        if round(total_calculated, 4) != round(total, 4):
+            raise ValueError(
+                f"Diferencia en el cálculo del total. Calculado {total_calculated}, Total {total}."
+            )
+
+
 def get_all_vehicles():
     headers = {"Authorization": f"Bearer {BEARER_TOKEN}"}
     params = {
@@ -88,8 +103,11 @@ def get_all_vehicles():
             "name": vehicle["name"],
             "vehicle_status_id": vehicle["statusId"],
             "vehicle_type": vehicle["type"],
-            "property_type": vehicle["property"],
+            # "property_type": vehicle["property"],
             "fuel_type": vehicle["fuel"],
+            "custom_fields": {
+                key: value for key, value in vehicle.items() if key.startswith("cf_")
+            },
         }
         for vehicle in vehicles
     ]
@@ -149,9 +167,6 @@ def get_all_entities():
     suppliers = get_all_suppliers()
     logging.info(f"All suppliers loaded {len(suppliers)}")
 
-    insurance_types = get_all_catalogs("INSURANCE_TYPES")
-    logging.info(f"All insurance types loaded {len(insurance_types)}")
-
     vehicle_types = get_all_catalogs("VEHICLES_TYPES")
     logging.info(f"All vehicle types loaded {len(vehicle_types)}")
 
@@ -164,7 +179,6 @@ def get_all_entities():
     return (
         vehicles,
         suppliers,
-        insurance_types,
         vehicle_types,
         vehicle_property_types,
         vehicle_fuel_types,
@@ -182,7 +196,6 @@ def process_excel_files():
     (
         vehicles,
         suppliers,
-        insurance_types,
         vehicle_types,
         vehicle_property_types,
         vehicle_fuel_types,
@@ -193,7 +206,7 @@ def process_excel_files():
             try:
                 file_path = os.path.join(PENDING_DIR, file)
                 logging.info(f"Procesando archivo: {file}")
-                df = pd.ExcelFile(file_path).parse("INSURANCES")
+                df = pd.ExcelFile(file_path).parse("RENTINGS")
                 processed_rows, error_rows = [], []
 
                 for index, row in df.iterrows():
@@ -202,7 +215,6 @@ def process_excel_files():
                             row,
                             vehicles,
                             suppliers,
-                            insurance_types,
                             vehicle_types,
                             vehicle_property_types,
                             vehicle_fuel_types,
@@ -230,7 +242,6 @@ def try_to_map(
     row,
     vehicles,
     suppliers,
-    insurance_types,
     vehicle_types,
     vehicle_property_types,
     vehicle_fuel_types,
@@ -244,40 +255,102 @@ def try_to_map(
             "registrationNumber": vehicle["registration_number_v1"],
             "vehicleStatusId": vehicle["vehicle_status_id"],
             "vehicleTypeId": get_catalog_id(vehicle["vehicle_type"], vehicle_types),
-            "propertyTypeId": get_catalog_id(
-                vehicle["property_type"], vehicle_property_types
-            ),
+            "propertyTypeId": get_catalog_id(row["Propiedad"], vehicle_property_types),
             "fuelTypeId": get_catalog_id(vehicle["fuel_type"], vehicle_fuel_types),
-            # Insurance
-            "insurancePolicyNumber": str(row["Número de Poliza"]),
-            "insuranceSupplierId": get_supplier_id(row["Proveedor"], suppliers),
-            "insuranceStartDate": convert_date_to_iso_format(
-                pd.to_datetime(row["Fecha inicio"], format="%d %m %Y").date()
-            ),
-            "insuranceEndDate": convert_date_to_iso_format(
-                pd.to_datetime(row["Fecha fin"], format="%d %m %Y").date()
-            ),
-            "insuranceSubtotal": float(row["Prima Subtotal"]),
-            "insuranceTaxType": TAX_TYPES.get(
-                row.get("Tipo de Impuesto"), "PERCENTAGE"
-            ),
-            "insuranceTax": float(str(row["% impuesto"]).replace("%", "")),
-            "insuranceTotalAmount": float(row["Prima Total"]),
-            "insuranceTypeId": get_catalog_id(row["Tipo De Seguro"], insurance_types),
-            "insurancePaymentFrequency": PAYMENT_FREQUENCIES[row["Frecuencia de Pago"]],
-            "createInsuranceScheduledExpense": str_to_bool(
-                row.get("Crear Gasto Programado", "FALSE")
-            ),
+            "customFieldsData": {
+                **vehicle["custom_fields"],
+                "cf_property_permanencia_minima": row.get("Permanencia mínima", ""),
+                "cf_property_tipo_de_contrato": row["Tipo de contrato"],
+                "cf_property_tipo_de_pago": row["Tipo de pago"],
+                "cf_property_vehiculo_de_sustitucion": str_to_bool(
+                    row.get("Vehículo de sustitución", "FALSE")
+                ),
+                "cf_property_seguro": str_to_bool(row.get("Seguro", "FALSE")),
+                "cf_property_servicio_de_telemetria": str_to_bool(
+                    row.get("Servicio de telemetría", "FALSE")
+                ),
+                "cf_property_mantenimiento_preventivo": str_to_bool(
+                    row.get("Mantenimiento preventivo", "FALSE")
+                ),
+                "cf_property_mantenimiento_correctivo": str_to_bool(
+                    row.get("Mantenimiento correctivo", "FALSE")
+                ),
+                "cf_property_asistencia_de_carretera": str_to_bool(
+                    row.get("Asistencia de carretera", "FALSE")
+                ),
+                "cf_property_gestion_de_tramites": str_to_bool(
+                    row.get("Gestión de trámites", "FALSE")
+                ),
+                "cf_property_gestion_de_multas": str_to_bool(
+                    row.get("Gestión de multas", "FALSE")
+                ),
+                "cf_property_rotulacion": str_to_bool(row.get("Rotulación", "FALSE")),
+                "cf_property_equipamiento": str_to_bool(
+                    row.get("Equipamiento", "FALSE")
+                ),
+            },
+            # Renting y Leasing
+            "vehicleProperties": {
+                "referenceCode": None,
+                "supplierId": get_supplier_id(row["Proveedor"], suppliers),
+                "startDate": convert_date_to_iso_format(
+                    pd.to_datetime(row["Fecha inicio"], format="%d %m %Y").date()
+                ),
+                "endDate": convert_date_to_iso_format(
+                    pd.to_datetime(row["Fecha fin"], format="%d %m %Y").date()
+                ),
+                "initialOdometer": float(row["Odónetro inicial"]),
+                "odometerContracted": float(row["Kilometraje contratado"]),
+                "odometerPerYear": float(row["Kilometraje por año"]),
+                "subtotalInitialFee": (
+                    float(row["Cuota inicial subtotal €"])
+                    if row.get("Cuota inicial subtotal €") is not None
+                    else None
+                ),
+                "initialFeeTaxType": TAX_TYPES.get(
+                    row.get("Tipo de Impuesto"), "PERCENTAGE"
+                ),
+                "initialFeeTax": float(row["% impuestos"]),
+                "initialFeeTotalAmount": (
+                    float(row["Cuota inicial total €"])
+                    if row.get("Cuota inicial total €") is not None
+                    else None
+                ),
+                "subtotalScheduledFee": float(row["Cuota de empresa €"]),
+                "scheduledFeeTaxType": TAX_TYPES.get(
+                    row.get("Tipo de Impuesto"), "PERCENTAGE"
+                ),
+                "scheduledFeeTax": float(row["% impuestos"]),
+                "employeeFee": float(row["Cuota de empleado €"]),
+                "scheduledFeeTotalAmount": float(row["Cuota recurrente total €"]),
+                "bonificationByOdometer": (
+                    float(row["Bonificación por km no recorrido"])
+                    if row.get("Bonificación por km no recorrido") is not None
+                    else None
+                ),
+                "penaltyByOdometer": (
+                    float(row["Penalización por km excedido"])
+                    if row.get("Penalización por km excedido") is not None
+                    else None
+                ),
+                "customFieldsData": {},
+                "purchaseDate": None,
+            },
         }
 
-        total_calculated = mapped_data["insuranceSubtotal"]
-        if mapped_data["insuranceTaxType"] == "PERCENTAGE":
-            total_calculated *= 1 + mapped_data["insuranceTax"] / 100
-        elif mapped_data["insuranceTaxType"] == "CURRENCY":
-            total_calculated += mapped_data["insuranceTax"]
+        validate_total_calculations(
+            mapped_data["subtotalInitialFee"],
+            mapped_data["initialFeeTaxType"],
+            mapped_data["initialFeeTax"],
+            mapped_data["initialFeeTotalAmount"],
+        )
 
-        if round(total_calculated, 4) != round(mapped_data["insuranceTotalAmount"], 4):
-            raise ValueError("Diferencia en el cálculo del total de prima")
+        validate_total_calculations(
+            mapped_data["subtotalScheduledFee"],
+            mapped_data["scheduledFeeTaxType"],
+            mapped_data["scheduledFeeTax"],
+            mapped_data["scheduledFeeTotalAmount"],
+        )
 
         return vehicle["id"], mapped_data
     except Exception as e:
