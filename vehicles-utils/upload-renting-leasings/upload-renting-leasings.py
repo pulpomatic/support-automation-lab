@@ -1,7 +1,10 @@
 import logging
+import math
 import os
 import requests
 import time
+
+# import traceback
 from datetime import datetime
 
 import pandas as pd
@@ -54,6 +57,24 @@ def str_to_bool(value):
 
 def is_not_empty(str: str) -> bool:
     return bool(str) or str != ""
+
+
+def normalize_value(value):
+    if value is None:
+        return None
+    try:
+        if math.isnan(float(value)):  # Convierte a float y verifica NaN
+            return None
+    except (
+        ValueError,
+        TypeError,
+    ):  # Si no se puede convertir, no es un número (ej. strings)
+        pass
+    return value  # Retorna el valor original si no es None o NaN
+
+
+def normalize_dict(data):
+    return {key: normalize_value(value) for key, value in data.items()}
 
 
 def clean_registration_number(registration_number):
@@ -208,7 +229,7 @@ def process_excel_files():
                 for index, row in df.iterrows():
                     try:
                         vehicle_id, mapped_data = try_to_map(
-                            row,
+                            normalize_dict(row),
                             vehicles,
                             suppliers,
                             vehicle_types,
@@ -341,22 +362,25 @@ def try_to_map(
             },
         }
 
+        vehicleProperties = mapped_data["vehicleProperties"]
+
         validate_total_calculations(
-            mapped_data["subtotalInitialFee"],
-            mapped_data["initialFeeTaxType"],
-            mapped_data["initialFeeTax"],
-            mapped_data["initialFeeTotalAmount"],
+            vehicleProperties["subtotalInitialFee"],
+            vehicleProperties["initialFeeTaxType"],
+            vehicleProperties["initialFeeTax"],
+            vehicleProperties["initialFeeTotalAmount"],
         )
 
         validate_total_calculations(
-            mapped_data["subtotalScheduledFee"],
-            mapped_data["scheduledFeeTaxType"],
-            mapped_data["scheduledFeeTax"],
-            mapped_data["scheduledFeeTotalAmount"],
+            vehicleProperties["subtotalScheduledFee"],
+            vehicleProperties["scheduledFeeTaxType"],
+            vehicleProperties["scheduledFeeTax"],
+            vehicleProperties["scheduledFeeTotalAmount"],
         )
 
         return vehicle["id"], mapped_data
     except Exception as e:
+        # traceback.print_exc()
         raise ValueError(f"Error al mapear fila: {str(e)}")
 
 
