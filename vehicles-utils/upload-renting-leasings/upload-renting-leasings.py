@@ -103,11 +103,7 @@ def get_all_vehicles():
             "name": vehicle["name"],
             "vehicle_status_id": vehicle["statusId"],
             "vehicle_type": vehicle["type"],
-            # "property_type": vehicle["property"],
             "fuel_type": vehicle["fuel"],
-            "custom_fields": {
-                key: value for key, value in vehicle.items() if key.startswith("cf_")
-            },
         }
         for vehicle in vehicles
     ]
@@ -257,38 +253,6 @@ def try_to_map(
             "vehicleTypeId": get_catalog_id(vehicle["vehicle_type"], vehicle_types),
             "propertyTypeId": get_catalog_id(row["Propiedad"], vehicle_property_types),
             "fuelTypeId": get_catalog_id(vehicle["fuel_type"], vehicle_fuel_types),
-            "customFieldsData": {
-                **vehicle["custom_fields"],
-                "cf_property_permanencia_minima": row.get("Permanencia mínima", ""),
-                "cf_property_tipo_de_contrato": row["Tipo de contrato"],
-                "cf_property_tipo_de_pago": row["Tipo de pago"],
-                "cf_property_vehiculo_de_sustitucion": str_to_bool(
-                    row.get("Vehículo de sustitución", "FALSE")
-                ),
-                "cf_property_seguro": str_to_bool(row.get("Seguro", "FALSE")),
-                "cf_property_servicio_de_telemetria": str_to_bool(
-                    row.get("Servicio de telemetría", "FALSE")
-                ),
-                "cf_property_mantenimiento_preventivo": str_to_bool(
-                    row.get("Mantenimiento preventivo", "FALSE")
-                ),
-                "cf_property_mantenimiento_correctivo": str_to_bool(
-                    row.get("Mantenimiento correctivo", "FALSE")
-                ),
-                "cf_property_asistencia_de_carretera": str_to_bool(
-                    row.get("Asistencia de carretera", "FALSE")
-                ),
-                "cf_property_gestion_de_tramites": str_to_bool(
-                    row.get("Gestión de trámites", "FALSE")
-                ),
-                "cf_property_gestion_de_multas": str_to_bool(
-                    row.get("Gestión de multas", "FALSE")
-                ),
-                "cf_property_rotulacion": str_to_bool(row.get("Rotulación", "FALSE")),
-                "cf_property_equipamiento": str_to_bool(
-                    row.get("Equipamiento", "FALSE")
-                ),
-            },
             # Renting y Leasing
             "vehicleProperties": {
                 "referenceCode": None,
@@ -333,8 +297,47 @@ def try_to_map(
                     if row.get("Penalización por km excedido") is not None
                     else None
                 ),
-                "customFieldsData": {},
-                "purchaseDate": None,
+                "customFieldsData": {
+                    "cf_property_permanencia_minima": (
+                        convert_date_to_iso_format(
+                            pd.to_datetime(
+                                row["Permanencia mínima"], format="%d %m %Y"
+                            ).date()
+                        )
+                        if row.get("Permanencia mínima") is not None
+                        else None
+                    ),
+                    "cf_property_tipo_de_contrato": row["Tipo de contrato"],
+                    "cf_property_tipo_de_pago": row["Tipo de pago"],
+                    "cf_property_vehiculo_de_sustitucion": str_to_bool(
+                        row.get("Vehículo de sustitución", "FALSE")
+                    ),
+                    "cf_property_seguro": str_to_bool(row.get("Seguro", "FALSE")),
+                    "cf_property_servicio_de_telemetria": str_to_bool(
+                        row.get("Servicio de telemetría", "FALSE")
+                    ),
+                    "cf_property_mantenimiento_preventivo": str_to_bool(
+                        row.get("Mantenimiento preventivo", "FALSE")
+                    ),
+                    "cf_property_mantenimiento_correctivo": str_to_bool(
+                        row.get("Mantenimiento correctivo", "FALSE")
+                    ),
+                    "cf_property_asistencia_de_carretera": str_to_bool(
+                        row.get("Asistencia de carretera", "FALSE")
+                    ),
+                    "cf_property_gestion_de_tramites": str_to_bool(
+                        row.get("Gestión de trámites", "FALSE")
+                    ),
+                    "cf_property_gestion_de_multas": str_to_bool(
+                        row.get("Gestión de multas", "FALSE")
+                    ),
+                    "cf_property_rotulacion": str_to_bool(
+                        row.get("Rotulación", "FALSE")
+                    ),
+                    "cf_property_equipamiento": str_to_bool(
+                        row.get("Equipamiento", "FALSE")
+                    ),
+                },
             },
         }
 
