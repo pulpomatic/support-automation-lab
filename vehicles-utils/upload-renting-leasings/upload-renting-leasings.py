@@ -193,12 +193,16 @@ def get_all_entities():
     vehicle_fuel_types = get_all_catalogs("FUEL_TYPES")
     logging.info(f"All vehicle fuel types loaded {len(vehicle_fuel_types)}")
 
+    expense_types = get_all_catalogs("EXPENSES_TYPES")
+    logging.info(f"All expense types loaded {len(expense_types)}")
+
     return (
         vehicles,
         suppliers,
         vehicle_types,
         vehicle_property_types,
         vehicle_fuel_types,
+        expense_types,
     )
 
 
@@ -216,6 +220,7 @@ def process_excel_files():
         vehicle_types,
         vehicle_property_types,
         vehicle_fuel_types,
+        expense_types,
     ) = get_all_entities()
 
     for file in os.listdir(PENDING_DIR):
@@ -228,23 +233,36 @@ def process_excel_files():
 
                 for index, row in df.iterrows():
                     try:
-                        vehicle_id, mapped_data = try_to_map(
+                        (
+                            vehicle_id,
+                            vehicle_renting_mapped_data,
+                            scheduled_expense_mapped_data,
+                        ) = try_to_map(
                             normalize_dict(row),
                             vehicles,
                             suppliers,
                             vehicle_types,
                             vehicle_property_types,
                             vehicle_fuel_types,
+                            expense_types,
                         )
 
-                        update_vehicle(vehicle_id, mapped_data)
-
-                        processed_rows.append(mapped_data)
+                        update_vehicle(vehicle_id, vehicle_renting_mapped_data)
 
                         logging.info(
                             f"Vehículo {vehicle_id} actualizado. Esperando {MAX_SECONDS_TO_SLEEP} segundos para continuar."
                         )
                         time.sleep(MAX_SECONDS_TO_SLEEP)
+
+                        if scheduled_expense_mapped_data is not None:
+                            create_scheduled_expense(scheduled_expense_mapped_data)
+
+                            logging.info(
+                                f"Gasto programado creado. Esperando {MAX_SECONDS_TO_SLEEP} segundos para continuar."
+                            )
+                            time.sleep(MAX_SECONDS_TO_SLEEP)
+
+                        processed_rows.append(vehicle_renting_mapped_data)
                     except Exception as e:
                         row["map_error"] = str(e)
                         error_rows.append(row)
@@ -262,11 +280,16 @@ def try_to_map(
     vehicle_types,
     vehicle_property_types,
     vehicle_fuel_types,
+    expense_types,
 ):
     try:
         vehicle = get_vehicle(row["Matrícula"], vehicles)
 
-        mapped_data = {
+        start_date = pd.to_datetime(row["Fecha inicio"], format="%d %m %Y")
+
+        end_date = pd.to_datetime(row["Fecha fin"], format="%d %m %Y")
+
+        vehicle_renting_mapped_data = {
             # Vehicle
             "name": vehicle["name"],
             "registrationNumber": vehicle["registration_number_v1"],
@@ -278,12 +301,8 @@ def try_to_map(
             "vehicleProperties": {
                 "referenceCode": None,
                 "supplierId": get_supplier_id(row["Proveedor"], suppliers),
-                "startDate": convert_date_to_iso_format(
-                    pd.to_datetime(row["Fecha inicio"], format="%d %m %Y").date()
-                ),
-                "endDate": convert_date_to_iso_format(
-                    pd.to_datetime(row["Fecha fin"], format="%d %m %Y").date()
-                ),
+                "startDate": convert_date_to_iso_format(start_date),
+                "endDate": convert_date_to_iso_format(end_date),
                 "initialOdometer": float(row["Odónetro inicial"]),
                 "odometerContracted": float(row["Kilometraje contratado"]),
                 "odometerPerYear": float(row["Kilometraje por año"]),
@@ -362,7 +381,7 @@ def try_to_map(
             },
         }
 
-        vehicleProperties = mapped_data["vehicleProperties"]
+        vehicleProperties = vehicle_renting_mapped_data["vehicleProperties"]
 
         validate_total_calculations(
             vehicleProperties["subtotalInitialFee"],
@@ -378,7 +397,35 @@ def try_to_map(
             vehicleProperties["scheduledFeeTotalAmount"],
         )
 
-        return vehicle["id"], mapped_data
+        scheduled_expense_mapped_data = None
+
+        if str_to_bool(row.get("create scheduled expense", "FALSE")):
+            scheduled_expense_mapped_data = {
+                "name": f"{row['Matrícula']} - Renting",
+                "expenseTypeId": get_catalog_id("Renting", expense_types),
+                "subtotal": vehicleProperties["scheduledFeeTotalAmount"],
+                "taxType": "PERCENTAGE",
+                "tax": 0,
+                "discountType": "PERCENTAGE",
+                "discount": 0,
+                "total": vehicleProperties["scheduledFeeTotalAmount"],
+                "segments": [],
+                "userId": None,
+                "vehicleId": vehicle["id"],
+                "paymentMethodId": None,
+                "supplierId": vehicleProperties["supplierId"],
+                "locationId": None,
+                "startDate": convert_date_to_iso_format(
+                    start_date + pd.Timedelta(hours=12)
+                ),
+                "endDate": convert_date_to_iso_format(
+                    end_date + pd.Timedelta(hours=12)
+                ),
+                "frecuency": PAYMENT_FREQUENCIES[row["Tipo de pago"]],
+                "customFieldsMetadata": {},
+            }
+
+        return vehicle["id"], vehicle_renting_mapped_data, scheduled_expense_mapped_data
     except Exception as e:
         # traceback.print_exc()
         raise ValueError(f"Error al mapear fila: {str(e)}")
@@ -455,7 +502,24 @@ def update_vehicle(vehicle_id, data):
     )
     if response.status_code != 200:
         logging.info(
-            f"Registrar combustible, error code {response.status_code}, {response.text}"
+            f"Actualizar vehículo, error code {response.status_code}, {response.text}"
+        )
+        raise ValueError(f"Error: {response.status_code} {response.text}")
+
+
+# Función para crear el gasto programado
+def create_scheduled_expense(data):
+    headers = {
+        "Authorization": f"Bearer {BEARER_TOKEN}",
+        "Content-Type": "application/json",
+    }
+    params = {}
+    response = requests.post(
+        f"{BASE_URL}/scheduled-expenses", json=data, headers=headers, params=params
+    )
+    if response.status_code != 201:
+        logging.info(
+            f"Crear gasto programado, error code {response.status_code}, {response.text}"
         )
         raise ValueError(f"Error: {response.status_code} {response.text}")
 
