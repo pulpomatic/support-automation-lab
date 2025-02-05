@@ -261,7 +261,7 @@ def try_to_map(
             "insuranceTaxType": TAX_TYPES.get(
                 row.get("Tipo de Impuesto"), "PERCENTAGE"
             ),
-            "insuranceTax": float(str(row["% impuesto"]).replace("%", "")),
+            "insuranceTax": float(row["% impuesto"]),
             "insuranceTotalAmount": float(row["Prima Total"]),
             "insuranceTypeId": get_catalog_id(row["Tipo De Seguro"], insurance_types),
             "insurancePaymentFrequency": PAYMENT_FREQUENCIES[row["Frecuencia de Pago"]],
