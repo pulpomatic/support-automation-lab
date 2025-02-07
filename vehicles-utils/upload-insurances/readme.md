@@ -1,4 +1,4 @@
-## Preparación del archivo
+## 1.- Preparación del archivo
 
 Crear una nueva carpeta llamda `pending` aquí.
 
@@ -17,13 +17,13 @@ Para columnas booleanas se recomienda que sean de tipo texto con los siguientes 
 - TRUE
 - FALSE
 
-## Variables de entorno
+## 2.- Variables de entorno
 
 El `BEARER_TOKEN` debe contener el token de la sesión de la cuenta a la cual se le van a cargar los datos.
 
 El `BASE_URL` debe contener la url de la api de producción.
 
-## Ejecución
+## 3.- Ejecución
 
 Para ejecutar la carga masiva solo hace falta colocarse en esta ruta e iniciar con el siguiente comando:
 
@@ -31,7 +31,7 @@ Para ejecutar la carga masiva solo hace falta colocarse en esta ruta e iniciar c
 python upload-insurances.py
 ```
 
-## Logs
+## 4.- Logs
 
 Al finalizar la ejecución puedes ver:
 
@@ -40,3 +40,18 @@ Los errores en la carpeta `error`
 Los logs en la carpeta `logs`
 
 Los valores que sí se procesaron en la carpeta `processed`
+
+## 5.- Recordatorios
+
+Al finalizar la ejecución se sugiere revisar los reminders creados y cambiar el usuario asignado por los usuarios administradores de la cuenta.
+
+Ya que automáticamente se asignan al usuario del token de sesión que probablemente sea un usuario de Soporte.
+
+Para cambiar el usuario es en dos lados:
+
+reminders:
+- Columna `created_by_user_id`: Colocar el id del usuario administrador.
+
+user_reminders:
+- Columna `user_id`: Colocar el id del usuario administrador.
+- Si la cuenta tiene más usuarios administrador, igual puede ser duplicar los registros y asignar el `user_id` correspondiente.

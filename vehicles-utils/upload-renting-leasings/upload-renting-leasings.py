@@ -299,7 +299,7 @@ def try_to_map(
             "fuelTypeId": get_catalog_id(vehicle["fuel_type"], vehicle_fuel_types),
             # Renting y Leasing
             "vehicleProperties": {
-                "referenceCode": None,
+                "referenceCode": row.get("Número de contrato"),
                 "supplierId": get_supplier_id(row["Proveedor"], suppliers),
                 "startDate": convert_date_to_iso_format(start_date),
                 "endDate": convert_date_to_iso_format(end_date),
@@ -314,7 +314,7 @@ def try_to_map(
                 "initialFeeTaxType": TAX_TYPES.get(
                     row.get("Tipo de Impuesto"), "PERCENTAGE"
                 ),
-                "initialFeeTax": float(row["% impuestos"]),
+                "initialFeeTax": float(row["% impuestos inicial"]),
                 "initialFeeTotalAmount": (
                     float(row["Cuota inicial total €"])
                     if row.get("Cuota inicial total €") is not None
@@ -324,7 +324,7 @@ def try_to_map(
                 "scheduledFeeTaxType": TAX_TYPES.get(
                     row.get("Tipo de Impuesto"), "PERCENTAGE"
                 ),
-                "scheduledFeeTax": float(row["% impuestos"]),
+                "scheduledFeeTax": float(row["% impuestos recurrente"]),
                 "employeeFee": float(row["Cuota de empleado €"]),
                 "scheduledFeeTotalAmount": float(row["Cuota recurrente total €"]),
                 "bonificationByOdometer": (
