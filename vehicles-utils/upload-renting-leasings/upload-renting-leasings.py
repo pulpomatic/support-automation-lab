@@ -1,7 +1,10 @@
 import logging
+import math
 import os
 import requests
 import time
+
+# import traceback
 from datetime import datetime
 
 import pandas as pd
@@ -56,10 +59,43 @@ def is_not_empty(str: str) -> bool:
     return bool(str) or str != ""
 
 
+def normalize_value(value):
+    if value is None:
+        return None
+    try:
+        if math.isnan(float(value)):  # Convierte a float y verifica NaN
+            return None
+    except (
+        ValueError,
+        TypeError,
+    ):  # Si no se puede convertir, no es un número (ej. strings)
+        pass
+    return value  # Retorna el valor original si no es None o NaN
+
+
+def normalize_dict(data):
+    return {key: normalize_value(value) for key, value in data.items()}
+
+
 def clean_registration_number(registration_number):
     import re
 
     return re.sub(r"[^a-zA-Z0-9]", "", registration_number)
+
+
+def validate_total_calculations(subtotal, tax_type, tax, total):
+    if subtotal is not None:
+        total_calculated = subtotal
+
+        if tax_type == "PERCENTAGE":
+            total_calculated *= 1 + tax / 100
+        elif tax_type == "CURRENCY":
+            total_calculated += tax
+
+        if round(total_calculated, 4) != round(total, 4):
+            raise ValueError(
+                f"Diferencia en el cálculo del total. Calculado {total_calculated}, Total {total}."
+            )
 
 
 def get_all_vehicles():
@@ -88,7 +124,6 @@ def get_all_vehicles():
             "name": vehicle["name"],
             "vehicle_status_id": vehicle["statusId"],
             "vehicle_type": vehicle["type"],
-            "property_type": vehicle["property"],
             "fuel_type": vehicle["fuel"],
         }
         for vehicle in vehicles
@@ -149,9 +184,6 @@ def get_all_entities():
     suppliers = get_all_suppliers()
     logging.info(f"All suppliers loaded {len(suppliers)}")
 
-    insurance_types = get_all_catalogs("INSURANCE_TYPES")
-    logging.info(f"All insurance types loaded {len(insurance_types)}")
-
     vehicle_types = get_all_catalogs("VEHICLES_TYPES")
     logging.info(f"All vehicle types loaded {len(vehicle_types)}")
 
@@ -161,13 +193,16 @@ def get_all_entities():
     vehicle_fuel_types = get_all_catalogs("FUEL_TYPES")
     logging.info(f"All vehicle fuel types loaded {len(vehicle_fuel_types)}")
 
+    expense_types = get_all_catalogs("EXPENSES_TYPES")
+    logging.info(f"All expense types loaded {len(expense_types)}")
+
     return (
         vehicles,
         suppliers,
-        insurance_types,
         vehicle_types,
         vehicle_property_types,
         vehicle_fuel_types,
+        expense_types,
     )
 
 
@@ -182,10 +217,10 @@ def process_excel_files():
     (
         vehicles,
         suppliers,
-        insurance_types,
         vehicle_types,
         vehicle_property_types,
         vehicle_fuel_types,
+        expense_types,
     ) = get_all_entities()
 
     for file in os.listdir(PENDING_DIR):
@@ -193,29 +228,41 @@ def process_excel_files():
             try:
                 file_path = os.path.join(PENDING_DIR, file)
                 logging.info(f"Procesando archivo: {file}")
-                df = pd.ExcelFile(file_path).parse("INSURANCES")
+                df = pd.ExcelFile(file_path).parse("RENTINGS")
                 processed_rows, error_rows = [], []
 
                 for index, row in df.iterrows():
                     try:
-                        vehicle_id, mapped_data = try_to_map(
-                            row,
+                        (
+                            vehicle_id,
+                            vehicle_renting_mapped_data,
+                            scheduled_expense_mapped_data,
+                        ) = try_to_map(
+                            normalize_dict(row),
                             vehicles,
                             suppliers,
-                            insurance_types,
                             vehicle_types,
                             vehicle_property_types,
                             vehicle_fuel_types,
+                            expense_types,
                         )
 
-                        update_vehicle(vehicle_id, mapped_data)
-
-                        processed_rows.append(mapped_data)
+                        update_vehicle(vehicle_id, vehicle_renting_mapped_data)
 
                         logging.info(
                             f"Vehículo {vehicle_id} actualizado. Esperando {MAX_SECONDS_TO_SLEEP} segundos para continuar."
                         )
                         time.sleep(MAX_SECONDS_TO_SLEEP)
+
+                        if scheduled_expense_mapped_data is not None:
+                            create_scheduled_expense(scheduled_expense_mapped_data)
+
+                            logging.info(
+                                f"Gasto programado creado. Esperando {MAX_SECONDS_TO_SLEEP} segundos para continuar."
+                            )
+                            time.sleep(MAX_SECONDS_TO_SLEEP)
+
+                        processed_rows.append(vehicle_renting_mapped_data)
                     except Exception as e:
                         row["map_error"] = str(e)
                         error_rows.append(row)
@@ -230,57 +277,157 @@ def try_to_map(
     row,
     vehicles,
     suppliers,
-    insurance_types,
     vehicle_types,
     vehicle_property_types,
     vehicle_fuel_types,
+    expense_types,
 ):
     try:
         vehicle = get_vehicle(row["Matrícula"], vehicles)
 
-        mapped_data = {
+        start_date = pd.to_datetime(row["Fecha inicio"], format="%d %m %Y")
+
+        end_date = pd.to_datetime(row["Fecha fin"], format="%d %m %Y")
+
+        vehicle_renting_mapped_data = {
             # Vehicle
             "name": vehicle["name"],
             "registrationNumber": vehicle["registration_number_v1"],
             "vehicleStatusId": vehicle["vehicle_status_id"],
             "vehicleTypeId": get_catalog_id(vehicle["vehicle_type"], vehicle_types),
-            "propertyTypeId": get_catalog_id(
-                vehicle["property_type"], vehicle_property_types
-            ),
+            "propertyTypeId": get_catalog_id(row["Propiedad"], vehicle_property_types),
             "fuelTypeId": get_catalog_id(vehicle["fuel_type"], vehicle_fuel_types),
-            # Insurance
-            "insurancePolicyNumber": str(row["Número de Poliza"]),
-            "insuranceSupplierId": get_supplier_id(row["Proveedor"], suppliers),
-            "insuranceStartDate": convert_date_to_iso_format(
-                pd.to_datetime(row["Fecha inicio"], format="%d %m %Y").date()
-            ),
-            "insuranceEndDate": convert_date_to_iso_format(
-                pd.to_datetime(row["Fecha fin"], format="%d %m %Y").date()
-            ),
-            "insuranceSubtotal": float(row["Prima Subtotal"]),
-            "insuranceTaxType": TAX_TYPES.get(
-                row.get("Tipo de Impuesto"), "PERCENTAGE"
-            ),
-            "insuranceTax": float(row["% impuesto"]),
-            "insuranceTotalAmount": float(row["Prima Total"]),
-            "insuranceTypeId": get_catalog_id(row["Tipo De Seguro"], insurance_types),
-            "insurancePaymentFrequency": PAYMENT_FREQUENCIES[row["Frecuencia de Pago"]],
-            "createInsuranceScheduledExpense": str_to_bool(
-                row.get("Crear Gasto Programado", "FALSE")
-            ),
+            # Renting y Leasing
+            "vehicleProperties": {
+                "referenceCode": row.get("Número de contrato"),
+                "supplierId": get_supplier_id(row["Proveedor"], suppliers),
+                "startDate": convert_date_to_iso_format(start_date),
+                "endDate": convert_date_to_iso_format(end_date),
+                "initialOdometer": float(row["Odónetro inicial"]),
+                "odometerContracted": float(row["Kilometraje contratado"]),
+                "odometerPerYear": float(row["Kilometraje por año"]),
+                "subtotalInitialFee": (
+                    float(row["Cuota inicial subtotal €"])
+                    if row.get("Cuota inicial subtotal €") is not None
+                    else None
+                ),
+                "initialFeeTaxType": TAX_TYPES.get(
+                    row.get("Tipo de Impuesto"), "PERCENTAGE"
+                ),
+                "initialFeeTax": float(row["% impuestos inicial"]),
+                "initialFeeTotalAmount": (
+                    float(row["Cuota inicial total €"])
+                    if row.get("Cuota inicial total €") is not None
+                    else None
+                ),
+                "subtotalScheduledFee": float(row["Cuota de empresa €"]),
+                "scheduledFeeTaxType": TAX_TYPES.get(
+                    row.get("Tipo de Impuesto"), "PERCENTAGE"
+                ),
+                "scheduledFeeTax": float(row["% impuestos recurrente"]),
+                "employeeFee": float(row["Cuota de empleado €"]),
+                "scheduledFeeTotalAmount": float(row["Cuota recurrente total €"]),
+                "bonificationByOdometer": (
+                    float(row["Bonificación por km no recorrido"])
+                    if row.get("Bonificación por km no recorrido") is not None
+                    else None
+                ),
+                "penaltyByOdometer": (
+                    float(row["Penalización por km excedido"])
+                    if row.get("Penalización por km excedido") is not None
+                    else None
+                ),
+                "customFieldsData": {
+                    "cf_property_permanencia_minima": (
+                        convert_date_to_iso_format(
+                            pd.to_datetime(
+                                row["Permanencia mínima"], format="%d %m %Y"
+                            ).date()
+                        )
+                        if row.get("Permanencia mínima") is not None
+                        else None
+                    ),
+                    "cf_property_tipo_de_contrato": row["Tipo de contrato"],
+                    "cf_property_tipo_de_pago": row["Tipo de pago"],
+                    "cf_property_vehiculo_de_sustitucion": str_to_bool(
+                        row.get("Vehículo de sustitución", "FALSE")
+                    ),
+                    "cf_property_seguro": str_to_bool(row.get("Seguro", "FALSE")),
+                    "cf_property_servicio_de_telemetria": str_to_bool(
+                        row.get("Servicio de telemetría", "FALSE")
+                    ),
+                    "cf_property_mantenimiento_preventivo": str_to_bool(
+                        row.get("Mantenimiento preventivo", "FALSE")
+                    ),
+                    "cf_property_mantenimiento_correctivo": str_to_bool(
+                        row.get("Mantenimiento correctivo", "FALSE")
+                    ),
+                    "cf_property_asistencia_de_carretera": str_to_bool(
+                        row.get("Asistencia de carretera", "FALSE")
+                    ),
+                    "cf_property_gestion_de_tramites": str_to_bool(
+                        row.get("Gestión de trámites", "FALSE")
+                    ),
+                    "cf_property_gestion_de_multas": str_to_bool(
+                        row.get("Gestión de multas", "FALSE")
+                    ),
+                    "cf_property_rotulacion": str_to_bool(
+                        row.get("Rotulación", "FALSE")
+                    ),
+                    "cf_property_equipamiento": str_to_bool(
+                        row.get("Equipamiento", "FALSE")
+                    ),
+                },
+            },
         }
 
-        total_calculated = mapped_data["insuranceSubtotal"]
-        if mapped_data["insuranceTaxType"] == "PERCENTAGE":
-            total_calculated *= 1 + mapped_data["insuranceTax"] / 100
-        elif mapped_data["insuranceTaxType"] == "CURRENCY":
-            total_calculated += mapped_data["insuranceTax"]
+        vehicleProperties = vehicle_renting_mapped_data["vehicleProperties"]
 
-        if round(total_calculated, 4) != round(mapped_data["insuranceTotalAmount"], 4):
-            raise ValueError("Diferencia en el cálculo del total de prima")
+        validate_total_calculations(
+            vehicleProperties["subtotalInitialFee"],
+            vehicleProperties["initialFeeTaxType"],
+            vehicleProperties["initialFeeTax"],
+            vehicleProperties["initialFeeTotalAmount"],
+        )
 
-        return vehicle["id"], mapped_data
+        validate_total_calculations(
+            vehicleProperties["subtotalScheduledFee"],
+            vehicleProperties["scheduledFeeTaxType"],
+            vehicleProperties["scheduledFeeTax"],
+            vehicleProperties["scheduledFeeTotalAmount"],
+        )
+
+        scheduled_expense_mapped_data = None
+
+        if str_to_bool(row.get("create scheduled expense", "FALSE")):
+            scheduled_expense_mapped_data = {
+                "name": f"{row['Matrícula']} - Renting",
+                "expenseTypeId": get_catalog_id("Renting", expense_types),
+                "subtotal": vehicleProperties["scheduledFeeTotalAmount"],
+                "taxType": "PERCENTAGE",
+                "tax": 0,
+                "discountType": "PERCENTAGE",
+                "discount": 0,
+                "total": vehicleProperties["scheduledFeeTotalAmount"],
+                "segments": [],
+                "userId": None,
+                "vehicleId": vehicle["id"],
+                "paymentMethodId": None,
+                "supplierId": vehicleProperties["supplierId"],
+                "locationId": None,
+                "startDate": convert_date_to_iso_format(
+                    start_date + pd.Timedelta(hours=12)
+                ),
+                "endDate": convert_date_to_iso_format(
+                    end_date + pd.Timedelta(hours=12)
+                ),
+                "frecuency": PAYMENT_FREQUENCIES[row["Tipo de pago"]],
+                "customFieldsMetadata": {},
+            }
+
+        return vehicle["id"], vehicle_renting_mapped_data, scheduled_expense_mapped_data
     except Exception as e:
+        # traceback.print_exc()
         raise ValueError(f"Error al mapear fila: {str(e)}")
 
 
@@ -355,7 +502,24 @@ def update_vehicle(vehicle_id, data):
     )
     if response.status_code != 200:
         logging.info(
-            f"Registrar combustible, error code {response.status_code}, {response.text}"
+            f"Actualizar vehículo, error code {response.status_code}, {response.text}"
+        )
+        raise ValueError(f"Error: {response.status_code} {response.text}")
+
+
+# Función para crear el gasto programado
+def create_scheduled_expense(data):
+    headers = {
+        "Authorization": f"Bearer {BEARER_TOKEN}",
+        "Content-Type": "application/json",
+    }
+    params = {}
+    response = requests.post(
+        f"{BASE_URL}/scheduled-expenses", json=data, headers=headers, params=params
+    )
+    if response.status_code != 201:
+        logging.info(
+            f"Crear gasto programado, error code {response.status_code}, {response.text}"
         )
         raise ValueError(f"Error: {response.status_code} {response.text}")
 
