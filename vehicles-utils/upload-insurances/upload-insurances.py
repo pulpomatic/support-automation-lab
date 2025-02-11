@@ -90,6 +90,7 @@ def get_all_vehicles():
             "vehicle_type": vehicle["type"],
             "property_type": vehicle["property"],
             "fuel_type": vehicle["fuel"],
+            "segments": vehicle["segments"],
         }
         for vehicle in vehicles
     ]
@@ -248,6 +249,9 @@ def try_to_map(
                 vehicle["property_type"], vehicle_property_types
             ),
             "fuelTypeId": get_catalog_id(vehicle["fuel_type"], vehicle_fuel_types),
+            "segments": [
+                segment.get("id") for segment in vehicle["segments"] if "id" in segment
+            ],
             # Insurance
             "insurancePolicyNumber": str(row["Número de Poliza"]),
             "insuranceSupplierId": get_supplier_id(row["Proveedor"], suppliers),
