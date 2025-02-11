@@ -125,6 +125,7 @@ def get_all_vehicles():
             "vehicle_status_id": vehicle["statusId"],
             "vehicle_type": vehicle["type"],
             "fuel_type": vehicle["fuel"],
+            "segments": vehicle["segments"],
         }
         for vehicle in vehicles
     ]
@@ -297,6 +298,9 @@ def try_to_map(
             "vehicleTypeId": get_catalog_id(vehicle["vehicle_type"], vehicle_types),
             "propertyTypeId": get_catalog_id(row["Propiedad"], vehicle_property_types),
             "fuelTypeId": get_catalog_id(vehicle["fuel_type"], vehicle_fuel_types),
+            "segments": [
+                segment.get("id") for segment in vehicle["segments"] if "id" in segment
+            ],
             # Renting y Leasing
             "vehicleProperties": {
                 "referenceCode": row.get("Número de contrato"),
