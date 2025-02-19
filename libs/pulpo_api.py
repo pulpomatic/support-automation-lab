@@ -59,3 +59,28 @@ class PulpoApi:
             }
             for catalog in catalogs
         ]
+
+    def get_all_suppliers(self):
+        headers = {"Authorization": f"Bearer {self.token}"}
+        params = {
+            "collectionType": "supplier",
+            "skip": 0,
+            "take": 0,
+        }
+        response = requests.get(f"{self.base_url}/suppliers", headers=headers, params=params)
+        if response.status_code != 200:
+            raise ValueError(
+                f"Error al obtener proveedores, el estatus devuelto {response.status_code}"
+            )
+        response_json = response.json()
+        suppliers = response_json["suppliers"]
+        if len(suppliers) == 0:
+            raise ValueError("No hay proveedores asociados a la cuenta")
+
+        return [
+            {
+                "id": supplier["id"],
+                "name": supplier["name"],
+            }
+            for supplier in suppliers
+        ]
