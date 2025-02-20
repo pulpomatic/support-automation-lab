@@ -3,6 +3,7 @@ import os
 import time
 # import traceback
 from datetime import datetime
+from decimal import Decimal
 
 import pandas as pd
 import pytz
@@ -110,7 +111,8 @@ def validate_total_calculations(subtotal, tax_type, tax, total):
     elif tax_type == "CURRENCY":
         total_calculated += tax
 
-    if round(total_calculated, 4) != round(total, 4):
+    check_difference = total_calculated - total
+    if abs(check_difference) > Decimal("0.0001"):
         raise ValueError(
             f"Diferencia en el cálculo del total. Calculado {total_calculated}, Total {total}."
         )
@@ -216,11 +218,13 @@ def process_excel_files():
         df = pd.read_excel(
             file_path, sheet_name=0, dtype=str, keep_default_na=False, skiprows=1
         )
+        df = df.replace("", None)
         # Ordenar el DataFrame por `Fecha fin` de forma ascendente
         # La importancia es debido a que debemos procesar de primero los más antiguos
-        df["Fecha fin"] = pd.to_datetime(df["Fecha fin"], format="%Y-%m-%d %H:%M:%S")
+        df["Fecha fin"] = pd.to_datetime(
+            df["Fecha fin"], format="%Y-%m-%d %H:%M:%S", errors="coerce"
+        )
         df = df.sort_values(by="Fecha fin", ascending=True)
-        df = df.replace("", None)
         processed_rows, error_rows = [], []
         total_rows = len(df)
 
@@ -263,10 +267,11 @@ def process_excel_files():
 
                     logging.info(f"({row_idx}/{total_rows}) Gasto programado creado.")
 
-                logging.info(
-                    f"Esperando {MAX_SECONDS_TO_SLEEP} segundos para continuar."
-                )
-                time.sleep(MAX_SECONDS_TO_SLEEP)
+                if running_type == "P":
+                    logging.info(
+                        f"Esperando {MAX_SECONDS_TO_SLEEP} segundos para continuar."
+                    )
+                    time.sleep(MAX_SECONDS_TO_SLEEP)
                 processed_rows.append(vehicle_renting_mapped_data)
             except Exception as e:
                 row["map_error"] = str(e)
@@ -288,9 +293,15 @@ def try_to_map(
 ):
     vehicle = get_vehicle(row["Matrícula"], vehicles)
 
+    if row.get("Fecha inicio") is None or str(row.get("Fecha inicio")) == "NaT":
+        raise ValueError("Fecha inicio es obligatorio o tiene un formato incorrecto")
+
     start_date = pd.to_datetime(row["Fecha inicio"], format="%Y-%m-%d %H:%M:%S")
 
-    end_date = pd.to_datetime(row["Fecha fin"], format="%Y-%m-%d %H:%M:%S")
+    if str(row.get("Fecha fin")) == "NaT":
+        raise ValueError("Fecha fin es obligatorio o tiene un formato incorrecto")
+
+    end_date = row["Fecha fin"]
 
     subtotalScheduledFee = None
     if row["Cuota recurrente de empresa €"] is not None:
@@ -349,8 +360,9 @@ def try_to_map(
             "initialFeeTaxType": initialFeeTaxType,
             "initialFeeTax": (
                 parse_percentage(row["Cuota inicial impuesto"])
-                if initialFeeTaxType == "PERCENTAGE"
-                else row["Cuota inicial impuesto"]
+                if row.get("Cuota inicial impuesto") is not None
+                and initialFeeTaxType == "PERCENTAGE"
+                else row.get("Cuota inicial impuesto")
             ),
             "initialFeeTotalAmount": (
                 float(row["Cuota inicial total €"])
@@ -367,12 +379,13 @@ def try_to_map(
             "scheduledFeeTaxType": scheduledFeeTaxType,
             "scheduledFeeTax": (
                 parse_percentage(row["Cuota recurrente impuesto"])
-                if scheduledFeeTaxType == "PERCENTAGE"
-                else row["Cuota recurrente impuesto"]
+                if row.get("Cuota recurrente impuesto") is not None
+                and scheduledFeeTaxType == "PERCENTAGE"
+                else row.get("Cuota recurrente impuesto")
             ),
             "scheduledFeeTotalAmount": (
                 float(row["Cuota recurrente total €"])
-                if row["Cuota recurrente total €"] is not None
+                if row.get("Cuota recurrente total €") is not None
                 else None
             ),
             "bonificationByOdometer": (
@@ -407,12 +420,12 @@ def try_to_map(
                 ),
                 "cf_property_valor_del_vehiculo": (
                     float(row["Valor del vehículo"])
-                    if row["Valor del vehículo"] is not None
+                    if row.get("Valor del vehículo") is not None
                     else None
                 ),
                 "cf_property_valor_residual": (
                     float(row["Valor residual"])
-                    if row["Valor residual"] is not None
+                    if row.get("Valor residual") is not None
                     else None
                 ),
                 "cf_property_vehiculo_de_sustitucion": str_to_bool(

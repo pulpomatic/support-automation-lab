@@ -104,8 +104,8 @@ order by r.created_at desc;
 -- Se asigna el administrador principal (en este caso, ${creator_id})
 -- ====================================================
 update reminders
-set responsible_id = ${creator_id},
-    created_by_user_id = ${creator_id}
+set responsible_id = ${admin_id},
+    created_by_user_id = ${admin_id}
 where id in (
     select r.id
     from reminders r

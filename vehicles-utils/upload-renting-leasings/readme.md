@@ -103,7 +103,21 @@ obligatorios en el excel, si no el script fallará y no tiene sentido hacer la c
 6. Para columnas booleanas se recomienda que sean de tipo texto con los siguientes valores
    - TRUE
    - FALSE
-7. Dependiendo de cada fila se puede crear un Gasto Programado, para ello la columna `crear gasto programado` debe tener TRUE, de lo contrario se asumirá false
+7. Dependiendo de cada fila se puede crear un Gasto Programado, para ello la columna `crear gasto programado` debe tener TRUE, de lo contrario se asumirá false.
+
+#### Proveedores de renting y leasing
+
+En ocasiones te tocará agregar estos proveedores, por ello debes visualizar antes de correr el script visualizar todos los proveedores
+para luego tomar la decisión si registrarlos o no.
+
+Así obtenemos los proveedores de renting y leasing
+```sql
+ select s.* from suppliers s
+ where s.suppliers_group_id = 6992;
+```
+
+Luego en el excel se puede hacer una tabla dinámica con la columna de proveedores para luego comparar con esta lista,
+en algunos casos tendrás que modificar nombres y en otros te tocará agregar los proveedores
 
 ### 2. Variables de entorno
 
