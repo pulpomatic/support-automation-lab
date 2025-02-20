@@ -75,10 +75,10 @@ with reminders_admins as (
         from users u
         inner join accounts_users au on au.user_id = u.id
         where au.account_id = ${account_id}
-          and u.email in (
-              'pfraile@ohla-group.com',
-              'rpzanca@ohla-group.com'
-          )
+          /* Puedes filtrar por email si lo requieres:
+             and u.email in ('armando.perdomo@getpulpo.com')
+          */
+          and au.user_type_id = 2  -- (en caso de que necesites todos los admins)
     ) u
     where r.account_id = ${account_id}
       and r.status = 'ACTIVE'
