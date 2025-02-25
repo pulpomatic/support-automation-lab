@@ -15,6 +15,8 @@ import pytz
 import requests
 from dotenv import load_dotenv
 
+from libs import setup_logger, pulpo_api
+
 load_dotenv()
 
 # Directorios
@@ -26,8 +28,6 @@ ERROR_DIR = os.path.join(os.path.dirname(__file__), "error")
 MAX_WORKERS = 5
 MAX_SECONDS_TO_SLEEP = 1
 
-# URL de la API de ejemplo
-BASE_URL = os.environ.get("BASE_URL")
 
 CUSTOM_FIELD_DEFAULT_SECTION_NAME = "Campos de Repsol"
 EXPENSES_CUSTOM_FIELDS_DEFINITION = [
@@ -91,48 +91,20 @@ FUELS_CUSTOM_FIELDS_DEFINITION = EXPENSES_CUSTOM_FIELDS_DEFINITION + [
     },
 ]
 
+
 def basic_auth(username, password):
     from base64 import b64encode
+
     token = b64encode(f"{username}:{password}".encode("utf-8")).decode("ascii")
     return f"Basic {token}"
 
 
-# Configuración del logger
-def setup_logger():
-    # Asegura que la carpeta 'logs' exista
-    logs_dir = "logs"
-    if not os.path.exists(logs_dir):
-        os.makedirs(logs_dir)
-
-    # Configura el nombre del archivo de log con la fecha y hora actual
-    log_filename = datetime.now().strftime("logs/log_%Y%m%d_%H%M%S.log")
-
-    # Configuración del logger
-    logger = logging.getLogger("process_logger")
-    logger.setLevel(logging.DEBUG)  # Nivel de log mínimo a capturar
-
-    # Formato del log
-    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-
-    # Handler para escribir en archivo
-    file_handler = logging.FileHandler(log_filename)
-    file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(formatter)
-
-    # Handler para mostrar en consola
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)
-    console_handler.setFormatter(formatter)
-
-    # Añade los handlers al logger
-    logger.addHandler(file_handler)
-    logger.addHandler(console_handler)
-
-    return logger
-
-
-# Inicializa el logger
 logger = setup_logger()
+
+TOKEN = os.environ.get("BEARER_TOKEN")
+BASE_URL = os.environ.get("BASE_URL")
+
+api = pulpo_api.PulpoApi(TOKEN, BASE_URL)
 
 
 def clean_registration_number(registration_number):
@@ -141,21 +113,11 @@ def clean_registration_number(registration_number):
     return re.sub(r"[^a-zA-Z0-9]", "", registration_number)
 
 
-def get_all_vehicles(token):
-    headers = {"Authorization": f"Bearer {token}"}
-    params = {
-        "skip": 0,
-        "take": 0,
-    }
-    response = requests.get(f"{BASE_URL}/vehicles", headers=headers, params=params)
-    if response.status_code != 200:
-        raise ValueError(
-            f"Error al obtener vehículos, el estatus devuelto {response.status_code}"
-        )
-    response_json = response.json()
-    vehicles = response_json["vehicles"]
-    if len(vehicles) == 0:
-        raise ValueError("No hay vehículos asociados a la cuenta")
+def get_all_vehicles():
+    vehicles = api.get_all_vehicles()
+    archived_vehicles = api.get_all_vehicles(True)
+
+    vehicles.extend(archived_vehicles)
 
     return [
         {
@@ -167,71 +129,24 @@ def get_all_vehicles(token):
         for vehicle in vehicles
     ]
 
-def get_all_drivers(token):
-    headers = {"Authorization": f"Bearer {token}"}
-    params = {
-        "skip": 0,
-        "take": 0,
-        "userType": 4
-    }
-    response = requests.get(f"{BASE_URL}/users", headers=headers, params=params)
-    if response.status_code != 200:
-        raise ValueError(
-            f"Error al obtener conductores, el estatus devuelto {response.status_code}"
-        )
-    response_json = response.json()
-    drivers = response_json["list"]
-    if len(drivers) == 0:
-        raise ValueError("No hay conductores asociados a la cuenta")
+
+def get_all_drivers():
+    drivers = api.get_all_drivers()
 
     return [
         {
             "id": driver["id"],
-            "name": clean_registration_number(
-                driver["name"]
-            ),
+            "name": clean_registration_number(driver["name"]),
         }
         for driver in drivers
     ]
 
-def get_all_catalogs(token, catalog_type):
-    headers = {"Authorization": f"Bearer {token}"}
-    response = requests.get(f"{BASE_URL}/catalogs/{catalog_type}", headers=headers)
-    if response.status_code != 200:
-        raise ValueError(
-            f"Error al obtener catálogos, el estatus devuelto {response.status_code}"
-        )
-    catalogs = response.json()
-    if len(catalogs) == 0:
-        raise ValueError(f"No hay catálogos {catalog_type} asociados a la cuenta")
 
-    return [
-        {
-            "id": catalog["id"],
-            "name": catalog["name"],
-            "referenceCode": catalog["referenceCode"],
-        }
-        for catalog in catalogs
-    ]
+def get_all_payment_methods():
+    payment_methods = api.get_all_payment_methods()
+    archived_payment_methods = api.get_all_payment_methods(True)
 
-
-def get_all_payment_methods(token):
-    headers = {"Authorization": f"Bearer {token}"}
-    params = {
-        "skip": 0,
-        "take": 0,
-    }
-    response = requests.get(
-        f"{BASE_URL}/payment-methods", headers=headers, params=params
-    )
-    if response.status_code != 200:
-        raise ValueError(
-            f"Error al obtener medios de pago, el estatus devuelto {response.status_code}"
-        )
-    response_json = response.json()
-    payment_methods = response_json["paymentMethods"]
-    if len(payment_methods) == 0:
-        raise ValueError("No hay medios de pago asociados a la cuenta")
+    payment_methods.extend(archived_payment_methods)
 
     return [
         {
@@ -243,15 +158,15 @@ def get_all_payment_methods(token):
     ]
 
 
-def get_all_entities(token: str):
-    vehicles = get_all_vehicles(token)
+def get_all_entities():
+    vehicles = get_all_vehicles()
     logger.info(f"All vehicles loaded {len(vehicles)}")
-    drivers = get_all_drivers(token)
+    drivers = get_all_drivers()
     logger.info(f"All drivers loaded {len(drivers)}")
-    payment_methods = get_all_payment_methods(token)
+    payment_methods = get_all_payment_methods()
     logger.info(f"All payment methods loaded {len(payment_methods)}")
-    fuel_type_of_fuels = get_all_catalogs(token, "FUEL-TYPES-OF-FUELS")
-    expense_types = get_all_catalogs(token, "EXPENSES-TYPES")
+    fuel_type_of_fuels = api.get_all_catalogs("FUEL-TYPES-OF-FUELS")
+    expense_types = api.get_all_catalogs("EXPENSES-TYPES")
     logger.info(f"All catalogs loaded")
     return vehicles, drivers, payment_methods, fuel_type_of_fuels, expense_types
 
@@ -287,8 +202,12 @@ def try_to_map_data(
         logger.error(f"Error mapeando registro en el indice {index}, {str(e)}")
         return {"success": False, "error": str(e)}
 
+
 def is_not_empty(str: str) -> bool:
+    if not str:
+        return False
     return bool(str) or str != ""
+
 
 # Función para mapear los gastos y combustibles
 def map_data(
@@ -303,7 +222,11 @@ def map_data(
     product_to_expense_types: list,
     expense_types: list,
 ):
-    cleaned_matricula = clean_registration_number(row_dict["MATRICULA"]) if is_not_empty(row_dict["MATRICULA"]) else None
+    cleaned_matricula = (
+        clean_registration_number(row_dict["MATRICULA"])
+        if is_not_empty(row_dict["MATRICULA"])
+        else None
+    )
     vehicle = next(
         (
             item
@@ -313,13 +236,14 @@ def map_data(
         ),
         None,
     )
-    num_tarjeta = int(row_dict["NUM_TARJET"]) if is_not_empty(row_dict["NUM_TARJET"]) else None
+    num_tarjeta = (
+        int(row_dict["NUM_TARJET"]) if is_not_empty(row_dict["NUM_TARJET"]) else None
+    )
     payment_method = next(
         (
             item
             for item in payment_methods
-            if is_not_empty(row_dict["NUM_TARJET"])
-               and item["slug"] == f"{num_tarjeta}"
+            if is_not_empty(row_dict["NUM_TARJET"]) and item["slug"] == f"{num_tarjeta}"
         ),
         None,
     )
@@ -327,34 +251,35 @@ def map_data(
     if cleaned_matricula and num_tarjeta:
         if not vehicle and not payment_method:
             raise ValueError(
-                f"El vehículo con la placa {row_dict['MATRICULA']} y el medio de pago con el número {num_tarjeta} no existen")
+                f"El vehículo con la placa {row_dict['MATRICULA']} y el medio de pago con el número {num_tarjeta} no existen"
+            )
 
         if not vehicle:
-            raise ValueError(f"El vehículo con la placa {row_dict['MATRICULA']} no existe")
+            raise ValueError(
+                f"El vehículo con la placa {row_dict['MATRICULA']} no existe"
+            )
 
         if not payment_method:
-            raise ValueError(
-                f"El medio de pago con el número {num_tarjeta} no existe"
-            )
+            raise ValueError(f"El medio de pago con el número {num_tarjeta} no existe")
     else:
         if cleaned_matricula and not vehicle:
-            raise ValueError(f"El vehículo con la placa {row_dict['MATRICULA']} no existe")
-        if num_tarjeta and not payment_method:
             raise ValueError(
-                f"El medio de pago con el número {num_tarjeta} no existe"
+                f"El vehículo con la placa {row_dict['MATRICULA']} no existe"
             )
+        if num_tarjeta and not payment_method:
+            raise ValueError(f"El medio de pago con el número {num_tarjeta} no existe")
 
     driver = next(
         (
             item
             for item in drivers
-            if is_not_empty(row_dict["COD_CONDUCTOR"])
-               and item["name"] == row_dict["COD_CONDUCTOR"]
+            if is_not_empty(row_dict.get("COD_CONDUCTOR"))
+            and item["name"] == row_dict.get("COD_CONDUCTOR")
         ),
         None,
     )
 
-    if is_not_empty(row_dict["COD_CONDUCTOR"]) and not driver:
+    if is_not_empty(row_dict.get("COD_CONDUCTOR")) and not driver:
         raise ValueError(
             f"El conductor con el nombre {row_dict['COD_CONDUCTOR']} no existe"
         )
@@ -374,7 +299,7 @@ def map_data(
         )
 
     # Unir fecha y hora, convertir a ISO8601 UTC
-    fec_operac = row_dict["FEC_OPERAC"]
+    fec_operac = row_dict["FEC_OPERAC"][:10].replace("-", "")
     hor_operac = row_dict["HOR_OPERAC"]
     local_dt = datetime.strptime(f"{fec_operac} {hor_operac}", "%Y%m%d %H%M")
     madrid_tz = pytz.timezone("Europe/Madrid")
@@ -382,7 +307,9 @@ def map_data(
     date = local_dt.astimezone(pytz.UTC).isoformat()
 
     kilometers = (
-        int(row_dict["KILOMETROS"]) if int(row_dict["KILOMETROS"]) > 0 and vehicle is not None else None
+        int(row_dict["KILOMETROS"])
+        if int(row_dict["KILOMETROS"]) > 0 and vehicle is not None
+        else None
     )
 
     operation_info = get_operation_type_info(
@@ -399,7 +326,8 @@ def map_data(
             (
                 item
                 for item in fuel_type_of_fuels
-                if item["referenceCode"] is not None and operation_info["info"]["reference_code"]
+                if item["referenceCode"] is not None
+                and operation_info["info"]["reference_code"]
                 == int(item["referenceCode"])
             ),
             None,
@@ -408,12 +336,16 @@ def map_data(
         price_per_unit = totals.get("subtotal") / liters if liters != 0 else 0
 
         discount_per_unit = (
-            float(row_dict["IMPORTE"]) - float(row_dict["IMP_TOTAL"])
-        ) / liters if liters != 0 else 0
+            (float(row_dict["IMPORTE"]) - float(row_dict["IMP_TOTAL"])) / liters
+            if liters != 0
+            else 0
+        )
 
-        price_per_unit_final = float(totals.get("total")) / float(
-            row_dict["NUM_LITROS"]
-        ) if liters != 0 else 0
+        price_per_unit_final = (
+            float(totals.get("total")) / float(row_dict["NUM_LITROS"])
+            if liters != 0
+            else 0
+        )
 
         return {
             "is_fuel": True,
@@ -456,7 +388,8 @@ def map_data(
             (
                 item
                 for item in expense_types
-                if item["referenceCode"] is not None and operation_info["info"]["reference_code"]
+                if item["referenceCode"] is not None
+                and operation_info["info"]["reference_code"]
                 == int(item["referenceCode"])
             ),
             None,
@@ -533,7 +466,7 @@ def calculate_totals(percentage_tax: str, importe: str, importe_total: str):
     return totals
 
 
-def process_data(data: list[dict], file_name: str, token: str, is_fuel: bool, testing_mode: bool):
+def process_data(data: list[dict], file_name: str, is_fuel: bool, testing_mode: bool):
     total_rows = len(data)
     if total_rows == 0:
         logger.info("No hay nada que procesar")
@@ -545,13 +478,15 @@ def process_data(data: list[dict], file_name: str, token: str, is_fuel: bool, te
     # Enumerar todos los datos una vez para evitar reiniciar row_idx
     indexed_data = list(enumerate(data, start=1))
 
+    workers = MAX_WORKERS if not testing_mode else 100
+
     # Dividimos la cantidad de filas en batches para que sean procesados en paralelo y no perder tiempo uno a uno
-    for idx in range(0, total_rows, MAX_WORKERS):
-        batch = indexed_data[idx : idx + MAX_WORKERS]
+    for idx in range(0, total_rows, workers):
+        batch = indexed_data[idx : idx + workers]
         futures: list[tuple[Future, Any]] = []
         # Inicializamos el ThreadPoolExecutor para que ejecute tantas {MAX_WORKERS} veces peticiones en paralelo
         # Es necesario inicializar el ThreadPoolExecutor con with para garantizar el shutdown
-        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        with ThreadPoolExecutor(max_workers=workers) as executor:
             for row_idx, row in batch:
                 future = executor.submit(
                     process_and_send,
@@ -559,9 +494,8 @@ def process_data(data: list[dict], file_name: str, token: str, is_fuel: bool, te
                     row_idx,
                     total_rows,
                     file_name,
-                    token,
                     is_fuel,
-                    testing_mode
+                    testing_mode,
                 )
                 raw_row = row["raw"]
                 futures.append((future, raw_row))
@@ -573,38 +507,36 @@ def process_data(data: list[dict], file_name: str, token: str, is_fuel: bool, te
                 else:
                     raw_row["error"] = result["error"]
                     processed_with_errors.append(raw_row)
-        logger.info(
-            f"Esperando {MAX_SECONDS_TO_SLEEP} segundos antes de seguir con el siguiente batch"
-        )
-        time.sleep(MAX_SECONDS_TO_SLEEP)
+        if not testing_mode:
+            logger.info(
+                f"Esperando {MAX_SECONDS_TO_SLEEP} segundos antes de seguir con el siguiente batch"
+            )
+            time.sleep(MAX_SECONDS_TO_SLEEP)
 
     return processed_successfully, processed_with_errors
 
 
 # Función para procesar y transformar una fila
 def process_and_send(
-    row, row_idx: int, total_rows: int, file_name: str, token: str, is_fuel: bool, testing_mode: bool
+    row,
+    row_idx: int,
+    total_rows: int,
+    file_name: str,
+    is_fuel: bool,
+    testing_mode: bool,
 ):
     send_request = (
-        partial(send_to_fuel_api, row, token)
-        if is_fuel
-        else partial(send_to_expense_api, row, token)
+        partial(send_to_fuel_api, row) if is_fuel else partial(send_to_expense_api, row)
     )
     try:
         logger.info(
             f"Enviando {'Combustible' if is_fuel else 'Gasto'} ({row_idx}/{total_rows}) del archivo {file_name}"
         )
-        time.sleep(
-            MAX_SECONDS_TO_SLEEP
-        )
+        time.sleep(MAX_SECONDS_TO_SLEEP)
         if testing_mode:
-            logger.info(
-                "Testing mode activado, omitiendo envío al API"
-            )
+            logger.info("Testing mode activado, omitiendo envío al API")
         else:
-            logger.info(
-                "Persist mode activado, enviando al API"
-            )
+            logger.info("Persist mode activado, enviando al API")
             send_request()
 
         return {"success": True}
@@ -617,8 +549,8 @@ def process_and_send(
 
 
 # Función para enviar un batch de filas a la API
-def send_to_fuel_api(row, token):
-    headers = {"Authorization": f"Bearer {token}"}
+def send_to_fuel_api(row):
+    headers = {"Authorization": f"Bearer {TOKEN}"}
     params = {"omitOdometerIfFails": "true"}
     response = requests.post(
         f"{BASE_URL}/fuels", data=row, headers=headers, params=params
@@ -630,8 +562,8 @@ def send_to_fuel_api(row, token):
         raise ValueError(f"Error: {response.status_code} {response.text}")
 
 
-def send_to_expense_api(row, token):
-    headers = {"Authorization": f"Bearer {token}"}
+def send_to_expense_api(row):
+    headers = {"Authorization": f"Bearer {TOKEN}"}
     params = {"omitOdometerIfFails": "true"}
     response = requests.post(
         f"{BASE_URL}/expenses", json=row, headers=headers, params=params
@@ -662,7 +594,10 @@ def load_locations(codes_list: list):
 
     # split simply_codes_list in list of max 100 data
     chunk_size = 100
-    chunks = [simply_codes_list[i:i + chunk_size] for i in range(0, len(simply_codes_list), chunk_size)]
+    chunks = [
+        simply_codes_list[i : i + chunk_size]
+        for i in range(0, len(simply_codes_list), chunk_size)
+    ]
 
     try:
         suppliers_data = []
@@ -674,17 +609,18 @@ def load_locations(codes_list: list):
         logger.info(f"All suppliers loaded {len(suppliers_data)}")
 
         simply_fiscal_codes = {item["fiscalCode"] for item in suppliers_data}
-        missing_fiscal_codes = [code for code in simply_codes_list if code not in simply_fiscal_codes]
+        missing_fiscal_codes = [
+            code for code in simply_codes_list if code not in simply_fiscal_codes
+        ]
         logger.info(f"missing_fiscal_codes: {len(missing_fiscal_codes)}")
 
-
-        if (len(missing_fiscal_codes) > 0):
-            uuid_namespace = uuid.UUID('0b5645c5-209e-44a7-bdaa-5c4888fc391b')
+        if len(missing_fiscal_codes) > 0:
+            uuid_namespace = uuid.UUID("0b5645c5-209e-44a7-bdaa-5c4888fc391b")
             for idx, fiscal_code in enumerate(missing_fiscal_codes):
                 # find for get name of establ with fiscal_code for create supplier
                 establ_data = next(
-                    ( item for item in codes_list if item["COD_ESTABL"] == fiscal_code),
-                    None
+                    (item for item in codes_list if item["COD_ESTABL"] == fiscal_code),
+                    None,
                 )
                 supplier = send_to_create_supplier(establ_data, uuid_namespace)
 
@@ -694,6 +630,7 @@ def load_locations(codes_list: list):
     except requests.RequestException as e:
         logging.error(f"HTTP Request failed: {e}")
         raise
+
 
 def get_establ_codes_list(files: list):
     codes_list = []
@@ -709,25 +646,27 @@ def get_establ_codes_list(files: list):
     clean_list = [dict(t) for t in {tuple(d.items()) for d in codes_list}]
     return clean_list
 
+
 def send_to_get_suppliers_by_fiscal_codes(fiscal_codes: list):
     basic_user = os.environ.get("BASIC_AUTH_USER", "admin")
     basic_password = os.environ.get("BASIC_AUTH_PASS", "admin")
     headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "Authorization": basic_auth(basic_user, basic_password)
+        "Authorization": basic_auth(basic_user, basic_password),
     }
-    params={
-        "fiscal_codes": json.dumps(fiscal_codes)
-    }
+    params = {"fiscal_codes": json.dumps(fiscal_codes)}
     response = requests.get(
         f"{BASE_URL}/suppliers/1/locations", headers=headers, params=params
     )
     if response.status_code != 200:
-        logger.info(f"Error al obtener locations, el estatus devuelto {response.status_code}")
+        logger.info(
+            f"Error al obtener locations, el estatus devuelto {response.status_code}"
+        )
         response.raise_for_status()
 
     return response.json()
+
 
 def send_to_create_supplier(establ_data, uuid_namespace):
     basic_user = os.environ.get("BASIC_AUTH_USER", "admin")
@@ -735,7 +674,7 @@ def send_to_create_supplier(establ_data, uuid_namespace):
     headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "Authorization": basic_auth(basic_user, basic_password)
+        "Authorization": basic_auth(basic_user, basic_password),
     }
     cod_establ = establ_data["COD_ESTABL"]
     origin_id = str(uuid.uuid5(uuid_namespace, f"REPSOL_SUPPLIER-{cod_establ}"))
@@ -745,11 +684,13 @@ def send_to_create_supplier(establ_data, uuid_namespace):
         "name": establ_data["NOM_ESTABL"],
         "supplierTypeId": 91845,
         "originId": origin_id,
-        "origin": "REPSOL"
+        "origin": "REPSOL",
     }
-    response = requests.post(f"{BASE_URL}/suppliers/1/locations", json=supplier, headers=headers)
+    response = requests.post(
+        f"{BASE_URL}/suppliers/1/locations", json=supplier, headers=headers
+    )
     return response.json()
-    # return supplier
+
 
 def get_json_from_file(filename):
     with open(filename, "r", encoding="utf-8") as json_file:
@@ -820,9 +761,9 @@ def ensure_directory_exists(directory):
         logger.info(f"Carpeta '{directory}' creada.")
 
 
-def configure_fuels_custom_fields(token, required_custom_fieds: list, type: str):
+def configure_fuels_custom_fields(required_custom_fieds: list, type: str):
     logger.info(f"Configurando Campos Personalizados {type}")
-    headers = {"Authorization": f"Bearer {token}"}
+    headers = {"Authorization": f"Bearer {TOKEN}"}
     params = {"type": type}
     response = requests.get(f"{BASE_URL}/custom-fields", headers=headers, params=params)
     if response.status_code != 200:
@@ -830,7 +771,7 @@ def configure_fuels_custom_fields(token, required_custom_fieds: list, type: str)
             f"Error al obtener campos personalizados {type}, el estatus devuelto {response.status_code}"
         )
     response_json = response.json()
-    if (response_json["customFields"] is None):
+    if response_json["customFields"] is None:
         custom_fields_saved = []
     else:
         custom_fields_saved = response_json["customFields"]["fields"]
@@ -874,24 +815,21 @@ def main():
     for idx, file in enumerate(files, start=1):
         logger.info(f"{idx} - {file}")
 
-    confirmation = input("¿Deseas procesar estos archivos? (Y/N): ").strip().upper()
+    logger.info("¿Deseas procesar estos archivos? (Y/N): ")
+    confirmation = input().strip().upper()
     if confirmation != "Y":
         logger.info("Operación cancelada.")
         return
 
-    running_type = input("¿En que modo vas a ejecutar, T: Testear para verificar posibles errores de mapeo *Recomendado si es primera vez*, P: Persistir? (T/P): ").strip().upper()
+    logger.info(
+        "¿En que modo vas a ejecutar, T: Testear para verificar posibles errores de mapeo *Recomendado si es primera vez*, P: Persistir? (T/P): "
+    )
+    running_type = input().strip().upper()
     if running_type not in ["T", "P"]:
         logger.info("Opción incorrecta, operación cancelada.")
         return
 
-    # Descomentar cuando se desee usar bearer token desde el archivo .env
-    # token = os.environ.get('BEARER_TOKEN')
-
-    token = input(
-        "Introduce el token activo para continuar (sin la palabra Bearer): "
-    ).strip()
-
-    if not token:
+    if not TOKEN:
         logger.info("Token no válido, operación cancelada.")
         return
 
@@ -899,15 +837,15 @@ def main():
     establ_codes = get_establ_codes_list(files)
     locations = load_locations(establ_codes)
 
-    vehicles, drivers, payment_methods, fuel_type_of_fuels, expense_types = get_all_entities(
-        token
+    vehicles, drivers, payment_methods, fuel_type_of_fuels, expense_types = (
+        get_all_entities()
     )
 
     product_to_expense_types = load_product_to_expense_types()
     product_to_fuel_types = load_product_to_fuel_types()
 
-    configure_fuels_custom_fields(token, EXPENSES_CUSTOM_FIELDS_DEFINITION, "expenses")
-    configure_fuels_custom_fields(token, FUELS_CUSTOM_FIELDS_DEFINITION, "fuels")
+    configure_fuels_custom_fields(EXPENSES_CUSTOM_FIELDS_DEFINITION, "expenses")
+    configure_fuels_custom_fields(FUELS_CUSTOM_FIELDS_DEFINITION, "fuels")
 
     # Procesamiento de archivos
     for idx, file_name in enumerate(files, start=1):
@@ -972,7 +910,9 @@ def main():
 
         if fuels_len > 0:
             logger.info("Procesando Combustibles")
-            processed_fuels, error_fuels = process_data(fuels, file_name, token, True, running_type == 'T')
+            processed_fuels, error_fuels = process_data(
+                fuels, file_name, True, running_type == "T"
+            )
             if len(processed_fuels):
                 save_raw_data(processed_fuels, file_name, "combustibles", PROCESSED_DIR)
             if len(error_fuels) > 0:
@@ -981,7 +921,7 @@ def main():
         if expenses_len > 0:
             logger.info("Procesando Gastos")
             processed_expenses, error_expenses = process_data(
-                expenses, file_name, token, False, running_type == 'T'
+                expenses, file_name, False, running_type == "T"
             )
             if len(processed_expenses) > 0:
                 save_raw_data(processed_expenses, file_name, "gastos", PROCESSED_DIR)

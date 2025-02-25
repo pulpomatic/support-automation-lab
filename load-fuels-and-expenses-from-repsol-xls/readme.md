@@ -6,6 +6,28 @@ Está diseñado para procesar en paralelo varios registros a la vez, con pausas 
 
 ⚠️Es muy importante considerar que esta carga no evalúa si ya fueron previamente ejecutadas o si esas operaciones existen, por lo tanto, cada vez que corras el script corres el riesgo de duplicar datos⚠️
 
+## Requisitos Previos
+
+### Instalación de Librerías
+
+1. Instalar las librerías comunes de Pulpomatic:
+   ```bash
+   cd ../libs
+   pip install -e .
+   ```
+   Este paso es necesario para que el script pueda acceder a las funciones comunes como el logger y el cliente de la API.
+
+2. Instalar las dependencias del script:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+### Variables de Entorno
+
+Crear un archivo `.env` que contenga:
+- `BEARER_TOKEN`: Token de autenticación para la API
+- `BASE_URL`: URL base de la API
+
 ## Estructura del Proyecto
 
 - `pending/`: carpeta donde se colocan los archivos de datos pendientes de procesar.
@@ -22,21 +44,6 @@ Este script utiliza las siguientes librerías:
 - `concurrent.futures`: para manejar procesamiento en paralelo.
 - `pytz`: para la gestión de zonas horarias.
 - `asyncio` y `functools`: para mejorar la gestión de concurrencia.
-
-### Requisitos
-
-- Python 3.7 o superior
-- Librerías adicionales: `pandas`, `requests`, `pytz`
-- Entorno que permita la instalación y ejecución de dependencias externas.
-
-## Instalación
-
-1. Clonar este repositorio o descargar el script.
-2. Instalar las dependencias:
-    ```bash
-    pip install -r requirements.txt
-    ```
-3. Crear un archivo `.env` que contenga las variables correspondientes, consulta el `.env.example`
 
 ## Configuración
 
@@ -98,4 +105,3 @@ yendo a la base de datos y consultando a ver si existen, en caso de que no hay q
 El archivo de log se crea en cada ejecución y se almacena en la carpeta `logs`. Los logs contienen:
 - Mensajes de información sobre el progreso del procesamiento.
 - Mensajes de error en caso de fallos en el mapeo de datos o en las solicitudes a la API.
-

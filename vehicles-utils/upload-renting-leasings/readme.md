@@ -1,8 +1,7 @@
 # Descripción
 
 Este script nos permite subir la información de Renting&Leasing de los clientes, su objetivo técnico es actualizar estos
-atributos
-en los datos del cliente
+atributos en los datos del cliente
 
 Este script evaluará los datos antes de cargarlos y arrojará errores en el caso de que se presenten, los que sean
 éxitoso pasarán a cargarse
@@ -16,7 +15,29 @@ que la carga sea lo más limpia posible.
 
 El script carga primero los datos de los vehículos y luego carga los datos de los gastos programados.
 
-## Requisistos
+## Requisitos Previos
+
+### Instalación de Librerías
+
+1. Instalar las librerías comunes de Pulpomatic:
+   ```bash
+   cd ../../libs
+   pip install -e .
+   ```
+   Este paso es necesario para que el script pueda acceder a las funciones comunes como el logger y el cliente de la API.
+
+2. Instalar las dependencias del script:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+### Variables de Entorno
+
+Crear un archivo `.env` que contenga:
+- `BEARER_TOKEN`: Token de autenticación para la API
+- `BASE_URL`: URL base de la API
+
+### Requisitos del Sistema
 
 - Tener activo el módulo de Renting&Leasing previamente
 - Tener acceso a la cuenta con un usuario de soporte
@@ -48,9 +69,18 @@ where account_id = $account_id
 
 ## Creación de Proveedores
 
-En algunos casos te tocará dar de alta algunos proveedores, debido a que nuestra base de datos es limitada y no tenemos
-todos los proveedores mapeados
-para ello podemos procesar el archivo en modo de pruebas y si fallan las filas por proveedor
+En algunos casos te tocará dar de alta algunos proveedores, debido a que nuestra base de datos es limitada y no tenemos todos los proveedores del mercado, para ello debes verificar que existan, si no agregarlos.
+
+## Recomendaciones
+
+1. Verificar que los nombres de las columnas coincidan exactamente con los especificados.
+2. Asegurarse de que las fechas estén en formato dd-mm-yyyy.
+3. Los importes deben ser numéricos y usar punto como separador decimal.
+4. Verificar que los valores como de fecha y número estén correctamente formateados y que no sean formato texto.
+5. Las celdas vacías se considerarán como `null` y dependiendo del caso se asumirá un `0` o un valor vacío
+6. Para columnas booleanas se recomienda que sean de tipo texto con los siguientes valores
+    - TRUE
+    - FALSE
 
 ## Estructura de Campos
 
