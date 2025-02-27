@@ -1,4 +1,3 @@
-import logging
 import os
 import requests
 import time
@@ -7,28 +6,23 @@ from datetime import datetime
 import pandas as pd
 from dotenv import load_dotenv
 
+from libs import pulpo_api, logger
+
 # Cargar variables de entorno
 load_dotenv()
 BEARER_TOKEN = os.getenv("BEARER_TOKEN")
 BASE_URL = os.getenv("BASE_URL")
+
+api = pulpo_api.PulpoApi(BEARER_TOKEN, BASE_URL)
 
 LOG_DIR = "./logs"
 PENDING_DIR = "./pending"
 PROCESSED_DIR = "./processed"
 ERROR_DIR = "./error"
 
-MAX_SECONDS_TO_SLEEP = 2
+MAX_SECONDS_TO_SLEEP = 1
 
-# Configuración de logging
-if not os.path.exists(LOG_DIR):
-    os.makedirs(LOG_DIR)
-logging.basicConfig(
-    filename=os.path.join(
-        LOG_DIR, f"process_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-    ),
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-)
+logging = logger.setup_logger()
 
 # Listas de referencia
 TAX_TYPES = {"Porcentaje": "PERCENTAGE", "Moneda": "CURRENCY"}
@@ -63,20 +57,7 @@ def clean_registration_number(registration_number):
 
 
 def get_all_vehicles():
-    headers = {"Authorization": f"Bearer {BEARER_TOKEN}"}
-    params = {
-        "skip": 0,
-        "take": 0,
-    }
-    response = requests.get(f"{BASE_URL}/vehicles", headers=headers, params=params)
-    if response.status_code != 200:
-        raise ValueError(
-            f"Error al obtener vehículos, el estatus devuelto {response.status_code}"
-        )
-    response_json = response.json()
-    vehicles = response_json["vehicles"]
-    if len(vehicles) == 0:
-        raise ValueError("No hay vehículos asociados a la cuenta")
+    vehicles = api.get_all_vehicles()
 
     return [
         {
@@ -96,70 +77,23 @@ def get_all_vehicles():
     ]
 
 
-def get_all_suppliers():
-    headers = {"Authorization": f"Bearer {BEARER_TOKEN}"}
-    params = {
-        "collectionType": "supplier",
-        "skip": 0,
-        "take": 0,
-    }
-    response = requests.get(f"{BASE_URL}/suppliers", headers=headers, params=params)
-    if response.status_code != 200:
-        raise ValueError(
-            f"Error al obtener proveedores, el estatus devuelto {response.status_code}"
-        )
-    response_json = response.json()
-    suppliers = response_json["suppliers"]
-    if len(suppliers) == 0:
-        raise ValueError("No hay proveedores asociados a la cuenta")
-
-    return [
-        {
-            "id": supplier["id"],
-            "name": supplier["name"],
-        }
-        for supplier in suppliers
-    ]
-
-
-def get_all_catalogs(catalog_type):
-    headers = {"Authorization": f"Bearer {BEARER_TOKEN}"}
-    response = requests.get(f"{BASE_URL}/catalogs/{catalog_type}", headers=headers)
-    if response.status_code != 200:
-        raise ValueError(
-            f"Error al obtener catálogos, el estatus devuelto {response.status_code}"
-        )
-    catalogs = response.json()
-    if len(catalogs) == 0:
-        raise ValueError(f"No hay catálogos {catalog_type} asociados a la cuenta")
-
-    return [
-        {
-            "id": catalog["id"],
-            "name": catalog["name"],
-            "referenceCode": catalog["referenceCode"],
-        }
-        for catalog in catalogs
-    ]
-
-
 def get_all_entities():
     vehicles = get_all_vehicles()
     logging.info(f"All vehicles loaded {len(vehicles)}")
 
-    suppliers = get_all_suppliers()
+    suppliers = api.get_all_suppliers()
     logging.info(f"All suppliers loaded {len(suppliers)}")
 
-    insurance_types = get_all_catalogs("INSURANCE_TYPES")
+    insurance_types = api.get_all_catalogs("INSURANCE_TYPES")
     logging.info(f"All insurance types loaded {len(insurance_types)}")
 
-    vehicle_types = get_all_catalogs("VEHICLES_TYPES")
+    vehicle_types = api.get_all_catalogs("VEHICLES_TYPES")
     logging.info(f"All vehicle types loaded {len(vehicle_types)}")
 
-    vehicle_property_types = get_all_catalogs("PROPERTIES_TYPES")
+    vehicle_property_types = api.get_all_catalogs("PROPERTIES_TYPES")
     logging.info(f"All vehicle property types loaded {len(vehicle_property_types)}")
 
-    vehicle_fuel_types = get_all_catalogs("FUEL_TYPES")
+    vehicle_fuel_types = api.get_all_catalogs("FUEL_TYPES")
     logging.info(f"All vehicle fuel types loaded {len(vehicle_fuel_types)}")
 
     return (
@@ -179,6 +113,16 @@ def process_excel_files():
     if not os.path.exists(ERROR_DIR):
         os.makedirs(ERROR_DIR)
 
+    logging.info(
+        "¿En que modo vas a ejecutar, T: Testear para verificar posibles errores de mapeo *Recomendado si es primera vez*, P: Persistir? (T/P):"
+    )
+    running_type = input().strip().upper()
+    if running_type not in ["T", "P"]:
+        logging.info("Opción incorrecta, operación cancelada.")
+        return
+
+    logging.info("Modo Prueba" if running_type == "T" else "Modo Persistir")
+
     # Obtenemos los catálogos
     (
         vehicles,
@@ -196,8 +140,9 @@ def process_excel_files():
                 logging.info(f"Procesando archivo: {file}")
                 df = pd.ExcelFile(file_path).parse("INSURANCES")
                 processed_rows, error_rows = [], []
+                total_rows = len(df)
 
-                for index, row in df.iterrows():
+                for row_idx, (_, row) in enumerate(df.iterrows(), start=1):
                     try:
                         vehicle_id, mapped_data = try_to_map(
                             row,
@@ -209,14 +154,22 @@ def process_excel_files():
                             vehicle_fuel_types,
                         )
 
-                        update_vehicle(vehicle_id, mapped_data)
+                        if running_type == "T":
+                            logging.info(
+                                "Procesando en modo test, omitiendo envío del vehículo"
+                            )
+                            print(vehicle_id, mapped_data)
+                        else:
+                            update_vehicle(vehicle_id, mapped_data)
 
                         processed_rows.append(mapped_data)
 
                         logging.info(
-                            f"Vehículo {vehicle_id} actualizado. Esperando {MAX_SECONDS_TO_SLEEP} segundos para continuar."
+                            f"({row_idx}/{total_rows}) Vehículo {vehicle_id} actualizado. Esperando {MAX_SECONDS_TO_SLEEP} segundos para continuar."
                         )
-                        time.sleep(MAX_SECONDS_TO_SLEEP)
+
+                        if running_type == "P":
+                            time.sleep(MAX_SECONDS_TO_SLEEP)
                     except Exception as e:
                         row["map_error"] = str(e)
                         error_rows.append(row)
