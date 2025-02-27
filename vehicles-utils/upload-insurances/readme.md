@@ -1,3 +1,36 @@
+## Requisitos Previos
+
+### Instalación de Librerías
+
+1. Instalar las librerías comunes de Pulpomatic:
+   ```bash
+   cd ../../libs
+   pip install -e .
+   ```
+   Este paso es necesario para que el script pueda acceder a las funciones comunes como el logger y el cliente de la API.
+
+2. Instalar las dependencias del script:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+## Estructura de Campos
+
+Los campos del excel se enumeran de la siguiente manera:
+
+1. `"Matrícula"` (Requerido)
+2. `"Número de Poliza"` (Requerido)
+3. `"Proveedor"` (Requerido)
+4. `"Fecha inicio"` (Requerido)
+5. `"Fecha fin"` (Requerido)
+6. `"Frecuencia de Pago"` (Requerido)
+7. `"Prima Subtotal"` (Requerido)
+8. `"Tipo de Impuesto"`
+9. `"% impuesto"` (Requerido)
+10. `"Prima Total"` (Requerido)
+11. `"Tipo De Seguro"` (Requerido)
+12. `"Crear Gasto Programado"`
+
 ## 1.- Preparación del archivo
 
 Crear una nueva carpeta llamda `pending` aquí.
@@ -51,6 +84,7 @@ Para cambiar el usuario es en dos lados:
 
 reminders:
 - Columna `created_by_user_id`: Colocar el id del usuario administrador.
+- Columna `responsible_id`: Colocar el id del usuario administrador.
 
 user_reminders:
 - Columna `user_id`: Colocar el id del usuario administrador.
