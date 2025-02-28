@@ -57,7 +57,7 @@ def convert_date_to_iso_format(date: datetime) -> str:
 
 
 def str_to_bool(value):
-    return str(value).strip().lower() == "true"
+    return str(value).strip().lower() in {"true", "1"}
 
 
 def is_not_empty(str: str) -> bool:
