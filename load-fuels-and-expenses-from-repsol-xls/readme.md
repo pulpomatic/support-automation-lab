@@ -83,7 +83,7 @@ Si hay registros que te dan error, puedes corregir lo que sea necesario y luego 
 Esta parte no es complicada, una vez terminada la carga podemos hacer una sumatoria de la columna IMP_TOTAL en excel, esto nos dará un valor por ejemplo 50.000,
 entonces luego corriendo este query:
 ```sql
-   select count(e.*), sum(e.total) from expenses e where e.created_by_user_id = $user_id and e.account_id = $account_id and e.create_at >= $current_date;
+   select count(e.*), sum(e.total) from expenses e where e.is_active is true and e.created_by_user_id = $user_id and e.account_id = $account_id and e.create_at >= $current_date;
 ```
 Cambiando los parámetros 
 - user_id: El usuario con el que generaste el token
