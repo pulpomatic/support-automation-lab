@@ -272,7 +272,7 @@ def process_files_parallel(bucket, files, account_ids, max_workers=4):
     return successful, failed
 
 def save_consolidated_file(file_path):
-    """Guardar todas las filas filtradas en un archivo CSV consolidado."""
+    """Guardar todas las filas filtradas en un archivo CSV consolidado eliminando duplicados."""
     print(f"Intentando guardar archivo consolidado en {file_path}")
     print(f"Estado de datos: header={filtered_rows['header'] is not None}, filas={len(filtered_rows['data'])}")
     
@@ -280,21 +280,111 @@ def save_consolidated_file(file_path):
         print("No hay datos para guardar en el archivo consolidado.")
         return False
     
+    # Eliminar filas duplicadas
+    print("Verificando y eliminando filas duplicadas...")
+    
+    # Convertir cada fila a tupla para poder usar como clave en un conjunto
+    unique_rows = {}
+    duplicates_count = 0
+    
+    for row in filtered_rows['data']:
+        # Usar una tupla de los valores como clave para identificar duplicados
+        row_key = tuple(row)
+        if row_key not in unique_rows:
+            unique_rows[row_key] = row
+        else:
+            duplicates_count += 1
+    
+    # Reemplazar los datos originales con los únicos
+    original_count = len(filtered_rows['data'])
+    filtered_rows['data'] = list(unique_rows.values())
+    
+    print(f"Se encontraron y eliminaron {duplicates_count} filas duplicadas")
+    print(f"Filas originales: {original_count}, Filas únicas: {len(filtered_rows['data'])}")
+    
     # Crear directorio si no existe
     os.makedirs(os.path.dirname(file_path), exist_ok=True)
     
     try:
+        # Guardar archivo principal consolidado con todos los datos
         with open(file_path, 'w', newline='', encoding='utf-8') as f:
             writer = csv.writer(f)
             # Escribir encabezado
             writer.writerow(filtered_rows['header'])
-            # Escribir datos
+            # Escribir datos únicos
             writer.writerows(filtered_rows['data'])
         
-        print(f"Archivo guardado exitosamente: {file_path}")
-        return True
+        print(f"Archivo consolidado guardado exitosamente: {file_path}")
+        
+        # Separar datos según el tipo de operación en el nombre del archivo
+        combustible_rows = []
+        otros_rows = []
+        
+        # Determinar la posición de la columna filename
+        filename_idx = filtered_rows['header'].index('filename')
+        
+        for row in filtered_rows['data']:
+            filename = row[filename_idx]
+            if 'combustible' in filename.lower():
+                combustible_rows.append(row)
+            elif 'otros' in filename.lower():
+                otros_rows.append(row)
+        
+        # Extraer fechas y cuenta del nombre del archivo consolidado
+        base_name = os.path.basename(file_path)
+        
+        # Determinar el directorio base
+        base_path = os.path.dirname(file_path)
+        
+        # Extraer fechas y cuenta del nombre del archivo
+        match = re.search(r'_(\d+)-(\d+)_([^.]+)', base_name)
+        if match:
+            fecha_inicio = match.group(1)
+            fecha_fin = match.group(2)
+            cuenta = match.group(3)
+            
+            # Crear nombres específicos para combustible y otros
+            combustible_filename = f"operaciones_combustible_liquidadas_{fecha_inicio}-{fecha_fin}_{cuenta}.csv"
+            otros_filename = f"operaciones_otros_liquidadas_{fecha_inicio}-{fecha_fin}_{cuenta}.csv"
+            
+            combustible_path = os.path.join(base_path, combustible_filename)
+            otros_path = os.path.join(base_path, otros_filename)
+            
+            # Guardar archivo de operaciones de combustible
+            if combustible_rows:
+                with open(combustible_path, 'w', newline='', encoding='utf-8') as f:
+                    writer = csv.writer(f)
+                    writer.writerow(filtered_rows['header'])
+                    writer.writerows(combustible_rows)
+                print(f"Archivo de operaciones de combustible guardado: {combustible_path}")
+                print(f"Total filas de combustible: {len(combustible_rows)}")
+            else:
+                print("No se encontraron operaciones de combustible para guardar.")
+            
+            # Guardar archivo de otras operaciones
+            if otros_rows:
+                with open(otros_path, 'w', newline='', encoding='utf-8') as f:
+                    writer = csv.writer(f)
+                    writer.writerow(filtered_rows['header'])
+                    writer.writerows(otros_rows)
+                print(f"Archivo de otras operaciones guardado: {otros_path}")
+                print(f"Total filas de otras operaciones: {len(otros_rows)}")
+            else:
+                print("No se encontraron otras operaciones para guardar.")
+            
+            # Guardar información para uso posterior
+            file_info = {
+                'combustible_path': combustible_path if combustible_rows else None,
+                'otros_path': otros_path if otros_rows else None,
+                'combustible_filename': combustible_filename if combustible_rows else None,
+                'otros_filename': otros_filename if otros_rows else None
+            }
+            return file_info
+        else:
+            print("No se pudo extraer información de fechas del nombre del archivo para generar archivos específicos.")
+            return True
     except Exception as e:
-        print(f"Error al guardar el archivo consolidado: {e}")
+        print(f"Error al guardar los archivos: {e}")
         import traceback
         traceback.print_exc()
         return False
@@ -308,6 +398,28 @@ def upload_to_s3(local_file_path, s3_key):
     except Exception as e:
         print(f"Error al subir archivo a S3: {e}")
         return False
+
+def upload_all_files_to_s3(local_file_path, s3_key, file_info=None):
+    """Subir archivo principal y los archivos divididos a S3."""
+    # Subir archivo principal
+    success = upload_to_s3(local_file_path, s3_key)
+    
+    # Subir archivos específicos si existen
+    if file_info and isinstance(file_info, dict):
+        # Ruta base en S3
+        s3_base_path = os.path.dirname(s3_key)
+        
+        # Subir archivo de combustible si existe
+        if file_info.get('combustible_path') and os.path.exists(file_info['combustible_path']):
+            combustible_s3_key = f"{s3_base_path}/{file_info['combustible_filename']}"
+            upload_to_s3(file_info['combustible_path'], combustible_s3_key)
+        
+        # Subir archivo de otros si existe
+        if file_info.get('otros_path') and os.path.exists(file_info['otros_path']):
+            otros_s3_key = f"{s3_base_path}/{file_info['otros_filename']}"
+            upload_to_s3(file_info['otros_path'], otros_s3_key)
+    
+    return success
 
 def format_size(size_in_bytes):
     """Convertir tamaño de bytes a MB y formatear."""
@@ -416,10 +528,13 @@ def main():
     # Guardar el archivo consolidado
     if filtered_rows['data']:
         print("\nGuardando archivo consolidado...")
-        if save_consolidated_file(consolidated_file_path):
+        result = save_consolidated_file(consolidated_file_path)
+        
+        if result:
             # Subir archivo consolidado a S3
-            print(f"\nSubiendo archivo consolidado a S3: {s3_consolidated_key}")
-            upload_to_s3(consolidated_file_path, s3_consolidated_key)
+            print(f"\nSubiendo archivos a S3...")
+            upload_all_files_to_s3(consolidated_file_path, s3_consolidated_key, 
+                                  file_info=result if isinstance(result, dict) else None)
             
             # Mostrar información sobre el archivo consolidado
             file_size = os.path.getsize(consolidated_file_path)
@@ -430,6 +545,22 @@ def main():
             print(f"- S3: s3://{bucket_name}/{s3_consolidated_key}")
             print(f"- Tamaño: {file_size_mb:.2f} MB")
             print(f"- Total de filas (incluyendo encabezado): {len(filtered_rows['data']) + 1}")
+            
+            # Verificar si existen los archivos adicionales y mostrar su información
+            if isinstance(result, dict):
+                if result.get('combustible_path') and os.path.exists(result['combustible_path']):
+                    comb_size = os.path.getsize(result['combustible_path']) / (1024 * 1024)
+                    print(f"\nArchivo de operaciones de combustible:")
+                    print(f"- Local: {result['combustible_path']}")
+                    print(f"- S3: s3://{bucket_name}/{to_reprocess_path}{result['combustible_filename']}")
+                    print(f"- Tamaño: {comb_size:.2f} MB")
+                
+                if result.get('otros_path') and os.path.exists(result['otros_path']):
+                    otros_size = os.path.getsize(result['otros_path']) / (1024 * 1024)
+                    print(f"\nArchivo de otras operaciones:")
+                    print(f"- Local: {result['otros_path']}")
+                    print(f"- S3: s3://{bucket_name}/{to_reprocess_path}{result['otros_filename']}")
+                    print(f"- Tamaño: {otros_size:.2f} MB")
         else:
             print("\nError al guardar el archivo consolidado.")
     else:
