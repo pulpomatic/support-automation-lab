@@ -212,7 +212,8 @@ def process_excel_files():
                 
                 # Cargar la hoja específica
                 df = pd.read_excel(file_path, sheet_name=sheet_name)
-                logging.info(f"Procesando hoja: {sheet_name} ({len(df)} filas)")
+                total_rows = len(df)
+                logging.info(f"Procesando hoja: {sheet_name} ({total_rows} filas)")
                 
                 # Comprobar si la hoja está vacía o no tiene las columnas esperadas
                 if df.empty:
@@ -225,6 +226,10 @@ def process_excel_files():
                 processing_error_rows = []  # Errores durante el procesamiento con el endpoint
 
                 for index, row in df.iterrows():
+                    current_row = index + 1  # Excel comienza en 1, no en 0
+                    remaining_rows = total_rows - current_row
+                    logging.info(f"Procesando fila {current_row} de {total_rows} ({remaining_rows} filas restantes)")
+                    
                     try:
                         # Mapear los datos de la fila a un objeto de recordatorio
                         reminder_data = try_to_map(row, drivers, vehicles)
