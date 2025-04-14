@@ -187,81 +187,122 @@ def process_excel_files():
     for file in files:
         try:
             file_path = os.path.join(PENDING_DIR, file)
-            df = pd.read_excel(file_path)
-
-            logging.info(f"\nProcesando archivo: {file}")
-
-            # Obtener todas las entidades necesarias
+            
+            # Leer todas las hojas disponibles en el archivo Excel
+            excel_file = pd.ExcelFile(file_path)
+            sheet_names = excel_file.sheet_names
+            
+            logging.info(f"\nArchivo: {file}")
+            logging.info(f"El archivo contiene {len(sheet_names)} hoja(s): {', '.join(sheet_names)}")
+            
+            # Obtener todas las entidades necesarias (una sola vez por archivo)
             drivers, vehicles = get_all_entities()
+            
+            # Procesar cada hoja del archivo
+            for sheet_index, sheet_name in enumerate(sheet_names):
+                logging.info(f"\n{'=' * 50}")
+                logging.info(f"Hoja {sheet_index + 1}/{len(sheet_names)}: {sheet_name}")
+                
+                # Preguntar al usuario si desea procesar esta hoja
+                logging.info(f"¿Deseas procesar la hoja '{sheet_name}'? (Y/N): ")
+                sheet_confirmation = input().strip().upper()
+                if sheet_confirmation != "Y":
+                    logging.info(f"Omitiendo hoja '{sheet_name}'.")
+                    continue
+                
+                # Cargar la hoja específica
+                df = pd.read_excel(file_path, sheet_name=sheet_name)
+                logging.info(f"Procesando hoja: {sheet_name} ({len(df)} filas)")
+                
+                # Comprobar si la hoja está vacía o no tiene las columnas esperadas
+                if df.empty:
+                    logging.info(f"La hoja '{sheet_name}' está vacía. Omitiendo.")
+                    continue
 
-            # Procesar cada fila del archivo
-            processed_rows = []
-            mapping_error_rows = []  # Errores durante el mapeo
-            processing_error_rows = []  # Errores durante el procesamiento con el endpoint
+                # Procesar cada fila del archivo
+                processed_rows = []
+                mapping_error_rows = []  # Errores durante el mapeo
+                processing_error_rows = []  # Errores durante el procesamiento con el endpoint
 
-            for index, row in df.iterrows():
-                try:
-                    # Mapear los datos de la fila a un objeto de recordatorio
-                    reminder_data = try_to_map(row, drivers, vehicles)
+                for index, row in df.iterrows():
+                    try:
+                        # Mapear los datos de la fila a un objeto de recordatorio
+                        reminder_data = try_to_map(row, drivers, vehicles)
 
-                    if persist_data:
-                        try:
-                            # Crear el recordatorio
-                            reminder_id = create_reminder(reminder_data)
-                            reminder_data["id"] = reminder_id
+                        if persist_data:
+                            try:
+                                # Crear el recordatorio
+                                reminder_id = create_reminder(reminder_data)
+                                reminder_data["id"] = reminder_id
+                                logging.info(
+                                    f"Recordatorio creado correctamente: {reminder_id}"
+                                )
+                                
+                                processed_rows.append(
+                                    {
+                                        "id": index + 2,  # +2 para compensar el encabezado y que excel comienza en 1
+                                        "data": reminder_data,
+                                        "original_data": row.to_dict(),  # Guardar datos originales para el reporte
+                                        "sheet_name": sheet_name  # Guardar el nombre de la hoja
+                                    }
+                                )
+                            except Exception as endpoint_error:
+                                # Error al procesar con el endpoint
+                                logging.error(
+                                    f"Error al crear el recordatorio para la fila {index + 2}: {str(endpoint_error)}"
+                                )
+                                processing_error_rows.append(
+                                    {
+                                        "id": index + 2,
+                                        "error": str(endpoint_error),
+                                        "data": row.to_dict(),
+                                        "mapped_data": reminder_data,
+                                        "sheet_name": sheet_name
+                                    }
+                                )
+                        else:
                             logging.info(
-                                f"Recordatorio creado correctamente: {reminder_id}"
+                                f"Datos del recordatorio mapeados correctamente (modo prueba): {reminder_data}"
                             )
-                            
                             processed_rows.append(
                                 {
-                                    "id": index + 2,  # +2 para compensar el encabezado y que excel comienza en 1
-                                    "data": reminder_data,
-                                    "original_data": row.to_dict()  # Guardar datos originales para el reporte
-                                }
-                            )
-                        except Exception as endpoint_error:
-                            # Error al procesar con el endpoint
-                            logging.error(
-                                f"Error al crear el recordatorio para la fila {index + 2}: {str(endpoint_error)}"
-                            )
-                            processing_error_rows.append(
-                                {
                                     "id": index + 2,
-                                    "error": str(endpoint_error),
-                                    "data": row.to_dict(),
-                                    "mapped_data": reminder_data
+                                    "data": reminder_data,
+                                    "original_data": row.to_dict(),  # Guardar datos originales para el reporte
+                                    "sheet_name": sheet_name
                                 }
                             )
-                    else:
-                        logging.info(
-                            f"Datos del recordatorio mapeados correctamente (modo prueba): {reminder_data}"
+
+                        time.sleep(MAX_SECONDS_TO_SLEEP)
+
+                    except Exception as mapping_error:
+                        # Error durante el mapeo
+                        logging.error(
+                            f"Error al mapear la fila {index + 2}: {str(mapping_error)}"
                         )
-                        processed_rows.append(
+                        mapping_error_rows.append(
                             {
                                 "id": index + 2,
-                                "data": reminder_data,
-                                "original_data": row.to_dict()  # Guardar datos originales para el reporte
+                                "error": str(mapping_error),
+                                "data": row.to_dict(),
+                                "sheet_name": sheet_name
                             }
                         )
 
-                    time.sleep(MAX_SECONDS_TO_SLEEP)
-
-                except Exception as mapping_error:
-                    # Error durante el mapeo
-                    logging.error(
-                        f"Error al mapear la fila {index + 2}: {str(mapping_error)}"
-                    )
-                    mapping_error_rows.append(
-                        {
-                            "id": index + 2,
-                            "error": str(mapping_error),
-                            "data": row.to_dict(),
-                        }
-                    )
-
-            # Guardar los resultados
-            save_results(file, processed_rows, mapping_error_rows, processing_error_rows)
+                # Guardar los resultados para esta hoja
+                sheet_suffix = f"_{sheet_name}"
+                save_results(file + sheet_suffix, processed_rows, mapping_error_rows, processing_error_rows)
+                
+                logging.info(f"Hoja '{sheet_name}' procesada.")
+                logging.info(f"{'=' * 50}")
+                
+                # Preguntar si el usuario desea continuar con la siguiente hoja
+                if sheet_index < len(sheet_names) - 1:
+                    logging.info("¿Deseas continuar con la siguiente hoja? (Y/N): ")
+                    continue_confirmation = input().strip().upper()
+                    if continue_confirmation != "Y":
+                        logging.info("Procesamiento de hojas detenido por el usuario.")
+                        break
 
             # Ya no se mueve el archivo original, permanece en la carpeta pending
             logging.info(f"Archivo {file} procesado. El archivo original permanece en la carpeta pending.")
@@ -474,7 +515,7 @@ def export_errors_to_excel(file_name, error_rows, error_type):
         error_type: Tipo de error ('mapping' o 'processing')
     
     Returns:
-        Nombre del archivo de errores generado o None si no hay errores
+        Nombre del archivo generado o None si no hay errores
     """
     if not error_rows:
         return None  # No hay errores para exportar
@@ -494,9 +535,14 @@ def export_errors_to_excel(file_name, error_rows, error_type):
     # Preparar los datos para el archivo Excel
     error_data = []
     for error_row in error_rows:
-        row_data = error_row["data"].copy()  # Hacer una copia para no modificar el original
+        # Hacer una copia para no modificar el original
+        row_data = error_row["data"].copy()  
         row_data["Error"] = error_row["error"]
         row_data["Fila"] = error_row["id"]
+        
+        # Añadir el nombre de la hoja si está disponible
+        if "sheet_name" in error_row:
+            row_data["Hoja"] = error_row["sheet_name"]
         
         # Si es un error de procesamiento, incluir los datos mapeados
         if error_type == "processing" and "mapped_data" in error_row:
@@ -541,6 +587,11 @@ def export_processed_to_excel(file_name, processed_rows):
         # Extraer los datos procesados
         row_data = row["data"].copy()  # Hacer una copia para no modificar el original
         row_data["Fila_Original"] = row["id"]
+        
+        # Añadir el nombre de la hoja si está disponible
+        if "sheet_name" in row:
+            row_data["Hoja"] = row["sheet_name"]
+            
         processed_data.append(row_data)
     
     # Crear el DataFrame y guardar como Excel
