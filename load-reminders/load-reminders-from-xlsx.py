@@ -352,11 +352,21 @@ def try_to_map(row, drivers, vehicles):
         # Añadir la hora
         if time_str:
             if isinstance(time_str, str):
-                hours, minutes = map(int, time_str.split(':'))
-                task_date = task_date.replace(hour=hours, minute=minutes)
+                try:
+                    # Manejar diferentes formatos de hora
+                    time_parts = time_str.split(':')
+                    
+                    hours = int(time_parts[0]) if len(time_parts) > 0 else 0
+                    minutes = int(time_parts[1]) if len(time_parts) > 1 else 0
+                    seconds = int(time_parts[2].split('.')[0]) if len(time_parts) > 2 else 0
+                    
+                    task_date = task_date.replace(hour=hours, minute=minutes, second=seconds)
+                except Exception as e:
+                    logging.warning(f"Error al procesar el formato de hora '{time_str}': {str(e)}. Se usará 00:00.")
+                    # En caso de error, no modificar la hora
             elif isinstance(time_str, time):
-                task_date = task_date.replace(hour=time_str.hour, minute=time_str.minute)
-
+                task_date = task_date.replace(hour=time_str.hour, minute=time_str.minute, second=time_str.second)
+    
         # Convertir la fecha a formato ISO
         limit_date_iso = convert_date_to_iso_format(task_date)
     except Exception as e:
