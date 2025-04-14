@@ -196,7 +196,8 @@ def process_excel_files():
 
             # Procesar cada fila del archivo
             processed_rows = []
-            error_rows = []
+            mapping_error_rows = []  # Errores durante el mapeo
+            processing_error_rows = []  # Errores durante el procesamiento con el endpoint
 
             for index, row in df.iterrows():
                 try:
@@ -204,65 +205,69 @@ def process_excel_files():
                     reminder_data = try_to_map(row, drivers, vehicles)
 
                     if persist_data:
-                        # Crear el recordatorio
-                        reminder_id = create_reminder(reminder_data)
-                        reminder_data["id"] = reminder_id
-                        logging.info(
-                            f"Recordatorio creado correctamente: {reminder_id}"
-                        )
+                        try:
+                            # Crear el recordatorio
+                            reminder_id = create_reminder(reminder_data)
+                            reminder_data["id"] = reminder_id
+                            logging.info(
+                                f"Recordatorio creado correctamente: {reminder_id}"
+                            )
+                            
+                            processed_rows.append(
+                                {
+                                    "id": index + 2,  # +2 para compensar el encabezado y que excel comienza en 1
+                                    "data": reminder_data,
+                                    "original_data": row.to_dict()  # Guardar datos originales para el reporte
+                                }
+                            )
+                        except Exception as endpoint_error:
+                            # Error al procesar con el endpoint
+                            logging.error(
+                                f"Error al crear el recordatorio para la fila {index + 2}: {str(endpoint_error)}"
+                            )
+                            processing_error_rows.append(
+                                {
+                                    "id": index + 2,
+                                    "error": str(endpoint_error),
+                                    "data": row.to_dict(),
+                                    "mapped_data": reminder_data
+                                }
+                            )
                     else:
                         logging.info(
                             f"Datos del recordatorio mapeados correctamente (modo prueba): {reminder_data}"
                         )
-
-                    processed_rows.append(
-                        {
-                            "id": index + 2,  # +2 para compensar el encabezado y que excel comienza en 1
-                            "data": reminder_data,
-                        }
-                    )
+                        processed_rows.append(
+                            {
+                                "id": index + 2,
+                                "data": reminder_data,
+                                "original_data": row.to_dict()  # Guardar datos originales para el reporte
+                            }
+                        )
 
                     time.sleep(MAX_SECONDS_TO_SLEEP)
 
-                except Exception as e:
+                except Exception as mapping_error:
+                    # Error durante el mapeo
                     logging.error(
-                        f"Error al procesar la fila {index + 2}: {str(e)}"
+                        f"Error al mapear la fila {index + 2}: {str(mapping_error)}"
                     )
-                    error_rows.append(
+                    mapping_error_rows.append(
                         {
                             "id": index + 2,
-                            "error": str(e),
+                            "error": str(mapping_error),
                             "data": row.to_dict(),
                         }
                     )
 
             # Guardar los resultados
-            save_results(file, processed_rows, error_rows)
+            save_results(file, processed_rows, mapping_error_rows, processing_error_rows)
 
-            # Mover el archivo procesado
-            if persist_data:
-                os.rename(
-                    file_path,
-                    os.path.join(
-                        PROCESSED_DIR,
-                        f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{file}",
-                    ),
-                )
-            else:
-                logging.info(
-                    f"Archivo {file} validado en modo prueba, no se moverá a la carpeta de procesados."
-                )
+            # Ya no se mueve el archivo original, permanece en la carpeta pending
+            logging.info(f"Archivo {file} procesado. El archivo original permanece en la carpeta pending.")
 
         except Exception as e:
             logging.error(f"Error al procesar el archivo {file}: {str(e)}")
-            if os.path.exists(os.path.join(PENDING_DIR, file)):
-                os.rename(
-                    os.path.join(PENDING_DIR, file),
-                    os.path.join(
-                        ERROR_DIR,
-                        f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{file}",
-                    ),
-                )
 
 
 def try_to_map(row, drivers, vehicles):
@@ -459,41 +464,96 @@ def create_reminder(data):
     return response_data["id"]
 
 
-def export_errors_to_excel(file_name, error_rows):
+def export_errors_to_excel(file_name, error_rows, error_type):
     """
     Exporta los errores a un archivo Excel.
+    
+    Args:
+        file_name: Nombre del archivo original
+        error_rows: Lista de filas con errores
+        error_type: Tipo de error ('mapping' o 'processing')
+    
+    Returns:
+        Nombre del archivo de errores generado o None si no hay errores
     """
     if not error_rows:
         return None  # No hay errores para exportar
     
-    # Crear un directorio para los errores si no existe
-    error_excel_dir = ERROR_DIR
-    if not os.path.exists(error_excel_dir):
-        os.makedirs(error_excel_dir)
+    # Asegurarse de que el directorio de errores existe
+    if not os.path.exists(ERROR_DIR):
+        os.makedirs(ERROR_DIR)
     
     # Generar nombre de archivo para el reporte de errores
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    error_file_name = f"{error_excel_dir}/{timestamp}_errors_{file_name}"
+    
+    # Determinar el sufijo según el tipo de error
+    suffix = "_mapeo.xlsx" if error_type == "mapping" else "_errors.xlsx"
+    
+    error_file_name = os.path.join(ERROR_DIR, f"{timestamp}_{os.path.splitext(file_name)[0]}{suffix}")
     
     # Preparar los datos para el archivo Excel
     error_data = []
     for error_row in error_rows:
-        row_data = error_row["data"]
+        row_data = error_row["data"].copy()  # Hacer una copia para no modificar el original
         row_data["Error"] = error_row["error"]
         row_data["Fila"] = error_row["id"]
+        
+        # Si es un error de procesamiento, incluir los datos mapeados
+        if error_type == "processing" and "mapped_data" in error_row:
+            for key, value in error_row["mapped_data"].items():
+                row_data[f"Mapeado_{key}"] = value
+                
         error_data.append(row_data)
     
     # Crear el DataFrame y guardar como Excel
     error_df = pd.DataFrame(error_data)
     error_df.to_excel(error_file_name, index=False)
     
-    logging.info(f"Archivo de errores creado: {error_file_name}")
+    logging.info(f"Archivo de errores {'de mapeo' if error_type == 'mapping' else 'de procesamiento'} creado: {error_file_name}")
     return error_file_name
 
 
-def save_results(file, processed_rows, error_rows):
+def export_processed_to_excel(file_name, processed_rows):
     """
-    Guarda los resultados del procesamiento en un archivo JSON.
+    Exporta las filas procesadas exitosamente a un archivo Excel en la carpeta processed.
+    
+    Args:
+        file_name: Nombre del archivo original
+        processed_rows: Lista de filas procesadas exitosamente
+    
+    Returns:
+        Nombre del archivo generado o None si no hay filas procesadas
+    """
+    if not processed_rows:
+        return None  # No hay filas procesadas para exportar
+    
+    # Asegurarse de que el directorio processed existe
+    if not os.path.exists(PROCESSED_DIR):
+        os.makedirs(PROCESSED_DIR)
+    
+    # Generar nombre de archivo para el reporte de filas procesadas
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    processed_file_name = os.path.join(PROCESSED_DIR, f"{timestamp}_{os.path.splitext(file_name)[0]}_processed.xlsx")
+    
+    # Preparar los datos para el archivo Excel
+    processed_data = []
+    for row in processed_rows:
+        # Extraer los datos procesados
+        row_data = row["data"].copy()  # Hacer una copia para no modificar el original
+        row_data["Fila_Original"] = row["id"]
+        processed_data.append(row_data)
+    
+    # Crear el DataFrame y guardar como Excel
+    processed_df = pd.DataFrame(processed_data)
+    processed_df.to_excel(processed_file_name, index=False)
+    
+    logging.info(f"Archivo de registros procesados creado: {processed_file_name}")
+    return processed_file_name
+
+
+def save_results(file, processed_rows, mapping_error_rows, processing_error_rows=None):
+    """
+    Guarda los resultados del procesamiento en un archivo JSON y exporta los errores a archivos Excel.
     """
     import json
     
@@ -502,9 +562,11 @@ def save_results(file, processed_rows, error_rows):
         "file": file,
         "timestamp": timestamp,
         "processed": len(processed_rows),
-        "errors": len(error_rows),
+        "mapping_errors": len(mapping_error_rows),
+        "processing_errors": len(processing_error_rows) if processing_error_rows else 0,
         "processed_rows": processed_rows,
-        "error_rows": error_rows,
+        "mapping_error_rows": mapping_error_rows,
+        "processing_error_rows": processing_error_rows if processing_error_rows else [],
     }
     
     if not os.path.exists(LOG_DIR):
@@ -514,17 +576,35 @@ def save_results(file, processed_rows, error_rows):
     with open(os.path.join(LOG_DIR, f"{timestamp}_{file}.json"), "w") as f:
         json.dump(results, f, indent=2, default=str)
     
-    # Exportar errores a Excel si hay errores
-    error_file = None
-    if error_rows:
-        error_file = export_errors_to_excel(file, error_rows)
+    # Exportar errores de mapeo a Excel si hay errores
+    mapping_error_file = None
+    if mapping_error_rows:
+        mapping_error_file = export_errors_to_excel(file, mapping_error_rows, "mapping")
+    
+    # Exportar errores de procesamiento a Excel si hay errores
+    processing_error_file = None
+    if processing_error_rows and len(processing_error_rows) > 0:
+        processing_error_file = export_errors_to_excel(file, processing_error_rows, "processing")
+    
+    # Exportar filas procesadas exitosamente a Excel
+    processed_file = None
+    if processed_rows:
+        processed_file = export_processed_to_excel(file, processed_rows)
     
     logging.info(
-        f"Procesamiento completado. Procesados: {len(processed_rows)}, Errores: {len(error_rows)}"
+        f"Procesamiento completado. Procesados: {len(processed_rows)}, "
+        f"Errores de mapeo: {len(mapping_error_rows)}, "
+        f"Errores de procesamiento: {len(processing_error_rows) if processing_error_rows else 0}"
     )
     
-    if error_file:
-        logging.info(f"Los errores se han exportado a: {error_file}")
+    if mapping_error_file:
+        logging.info(f"Los errores de mapeo se han exportado a: {mapping_error_file}")
+    
+    if processing_error_file:
+        logging.info(f"Los errores de procesamiento se han exportado a: {processing_error_file}")
+    
+    if processed_file:
+        logging.info(f"Los registros procesados se han exportado a: {processed_file}")
 
 
 if __name__ == "__main__":
