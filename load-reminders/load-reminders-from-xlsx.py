@@ -312,6 +312,7 @@ def process_excel_files():
 
 
 def try_to_map(row, drivers, vehicles):
+    from datetime import time
     """
     Mapea una fila de datos a un objeto de recordatorio según la estructura requerida.
     """
@@ -332,7 +333,6 @@ def try_to_map(row, drivers, vehicles):
         raise ValueError("Fecha de tarea no especificada.")
     
     time_str = normalize_value(row.get("Hora*", "00:00"))
-    
     try:
         if isinstance(date_str, datetime):
             task_date = date_str
@@ -349,9 +349,10 @@ def try_to_map(row, drivers, vehicles):
             if isinstance(time_str, str):
                 hours, minutes = map(int, time_str.split(':'))
                 task_date = task_date.replace(hour=hours, minute=minutes)
-            elif isinstance(time_str, datetime):
+            elif isinstance(time_str, time):
                 task_date = task_date.replace(hour=time_str.hour, minute=time_str.minute)
-        
+
+        # Convertir la fecha a formato ISO
         limit_date_iso = convert_date_to_iso_format(task_date)
     except Exception as e:
         raise ValueError(f"Formato de fecha o hora inválido: {str(e)}")
