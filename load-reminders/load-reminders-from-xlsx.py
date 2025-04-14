@@ -532,11 +532,13 @@ def export_errors_to_excel(file_name, error_rows, error_type):
     
     error_file_name = os.path.join(ERROR_DIR, f"{timestamp}_{os.path.splitext(file_name)[0]}{suffix}")
     
-    # Preparar los datos para el archivo Excel
+    # Preparar los datos para el archivo Excel - Usar los datos originales
     error_data = []
     for error_row in error_rows:
-        # Hacer una copia para no modificar el original
-        row_data = error_row["data"].copy()  
+        # Usar los datos originales de la fila del Excel
+        row_data = error_row["data"].copy()  # Los datos originales están en "data"
+        
+        # Añadir información sobre el error
         row_data["Error"] = error_row["error"]
         row_data["Fila"] = error_row["id"]
         
@@ -544,10 +546,14 @@ def export_errors_to_excel(file_name, error_rows, error_type):
         if "sheet_name" in error_row:
             row_data["Hoja"] = error_row["sheet_name"]
         
-        # Si es un error de procesamiento, incluir los datos mapeados
+        # Si es un error de procesamiento y queremos añadir alguna info del JSON mapeado
         if error_type == "processing" and "mapped_data" in error_row:
-            for key, value in error_row["mapped_data"].items():
-                row_data[f"Mapeado_{key}"] = value
+            # Añadir solo el ID del recordatorio si existe (para referencia)
+            if "id" in error_row["mapped_data"]:
+                row_data["ID_Recordatorio"] = error_row["mapped_data"]["id"]
+            
+            # Opcionalmente podríamos añadir otra info clave del mapeo
+            # row_data["JSON_Procesado"] = str(error_row["mapped_data"])
                 
         error_data.append(row_data)
     
@@ -581,12 +587,22 @@ def export_processed_to_excel(file_name, processed_rows):
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     processed_file_name = os.path.join(PROCESSED_DIR, f"{timestamp}_{os.path.splitext(file_name)[0]}_processed.xlsx")
     
-    # Preparar los datos para el archivo Excel
+    # Preparar los datos para el archivo Excel - Usar los datos originales
     processed_data = []
     for row in processed_rows:
-        # Extraer los datos procesados
-        row_data = row["data"].copy()  # Hacer una copia para no modificar el original
+        # Usar los datos originales de la fila del Excel
+        if "original_data" in row and row["original_data"]:
+            row_data = row["original_data"].copy()
+        else:
+            # Fallback a los datos procesados si no hay originales
+            row_data = {}
+            
+        # Añadir información adicional
         row_data["Fila_Original"] = row["id"]
+        
+        # Añadir el ID del recordatorio creado (si existe)
+        if "data" in row and "id" in row["data"]:
+            row_data["ID_Recordatorio"] = row["data"]["id"]
         
         # Añadir el nombre de la hoja si está disponible
         if "sheet_name" in row:
